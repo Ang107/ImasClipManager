@@ -1,4 +1,5 @@
-﻿using System;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -28,7 +29,7 @@ namespace ImasClipManager.Models
         Other   // その他
     }
 
-    public class Clip
+    public partial class Clip : ObservableObject
     {
         [Key]
         public int Id { get; set; }
@@ -38,11 +39,11 @@ namespace ImasClipManager.Models
         [Required(ErrorMessage = "ファイルパスは必須です")]
         public string FilePath { get; set; } = string.Empty;
 
-        // DBにはミリ秒で保存
+        // ... (時間関連はそのまま) ...
         public long StartTimeMs { get; set; } = 0;
-        public long? EndTimeMs { get; set; } // nullなら最後まで
+        public long? EndTimeMs { get; set; }
 
-        // 時間表示・入力用プロパティ
+        // 時間文字列プロパティもそのままでOK（変更通知が必要ならここもSetPropertyにするが、今回は割愛）
         [NotMapped]
         public string StartTimeStr
         {
@@ -55,7 +56,6 @@ namespace ImasClipManager.Models
                     return;
                 }
 
-                // ★修正: コロンが1つの場合(xx:yy)は mm:ss (分:秒) として解釈する
                 var parts = value.Split(':');
                 if (parts.Length == 2)
                 {
@@ -66,7 +66,6 @@ namespace ImasClipManager.Models
                     }
                 }
 
-                // それ以外(hh:mm:ssなど)は標準パーサーに任せる
                 if (TimeSpan.TryParse(value, out var ts))
                 {
                     StartTimeMs = (long)ts.TotalMilliseconds;
@@ -86,7 +85,6 @@ namespace ImasClipManager.Models
                     return;
                 }
 
-                // ★修正: コロンが1つの場合(xx:yy)は mm:ss (分:秒) として解釈する
                 var parts = value.Split(':');
                 if (parts.Length == 2)
                 {
@@ -105,21 +103,40 @@ namespace ImasClipManager.Models
         }
 
         public string ConcertName { get; set; } = string.Empty;
-
         public BrandType Brands { get; set; } = BrandType.None;
-
         public LiveType LiveType { get; set; } = LiveType.Seiyuu;
         public DateTime ConcertDate { get; set; } = DateTime.Today;
-
         public string SongTitle { get; set; } = string.Empty;
 
-        public string ThumbnailPath { get; set; } = string.Empty;
-        public bool IsAutoThumbnail { get; set; } = true;
-        public int PlayCount { get; set; } = 0;
+        // ★変更: UIに通知したいプロパティを ObservableProperty 形式に変更
+
+        private string _thumbnailPath = string.Empty;
+        public string ThumbnailPath
+        {
+            get => _thumbnailPath;
+            set => SetProperty(ref _thumbnailPath, value);
+        }
+
+        private bool _isAutoThumbnail = true;
+        public bool IsAutoThumbnail
+        {
+            get => _isAutoThumbnail;
+            set => SetProperty(ref _isAutoThumbnail, value);
+        }
+
+        private int _playCount = 0;
+        public int PlayCount
+        {
+            get => _playCount;
+            set => SetProperty(ref _playCount, value);
+        }
+
+        // ... (残りのプロパティ) ...
         public string Lyrics { get; set; } = string.Empty;
         public string Remarks { get; set; } = string.Empty;
         public DateTime CreatedAt { get; set; } = DateTime.Now;
         public DateTime UpdatedAt { get; set; } = DateTime.Now;
+
         public virtual ICollection<Performer> Performers { get; set; } = new List<Performer>();
     }
 }

@@ -1,13 +1,16 @@
 ﻿using ImasClipManager.Helpers;
 using ImasClipManager.Models;
+using ImasClipManager.Services; // ThumbnailService用
 using ImasClipManager.ViewModels;
 using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
+using System.Threading.Tasks; // Task用
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;   // Cursor用
+using Xabe.FFmpeg;            // IMediaInfo用
 
 namespace ImasClipManager.Views
 {
@@ -127,22 +130,6 @@ namespace ImasClipManager.Views
             this.DataContext = this;
         }
 
-        private void SelectFile_Click(object sender, RoutedEventArgs e)
-        {
-            if (!IsEditable) return;
-
-            var dialog = new OpenFileDialog();
-            dialog.Filter = "動画ファイル|*.mp4;*.mkv;*.avi;*.ts;*.m2ts;*.iso|すべてのファイル|*.*";
-            if (dialog.ShowDialog() == true)
-            {
-                ClipData.FilePath = dialog.FileName;
-                FilePathBox.Text = dialog.FileName;
-                FilePathBox.GetBindingExpression(TextBox.TextProperty)?.UpdateSource();
-
-                // エラーが出ていれば消す
-                FilePathErrorText.Text = "";
-            }
-        }
 
         private void Action_Click(object sender, RoutedEventArgs e)
         {
@@ -216,6 +203,114 @@ namespace ImasClipManager.Views
                 foreach (var p in selected) ClipData.Performers.Add(p);
 
                 PerformersTextBox.Text = PerformersDisplayText;
+            }
+        }
+
+        // 動画ファイル選択時
+        private async void SelectFile_Click(object sender, RoutedEventArgs e)
+        {
+            if (!IsEditable) return;
+
+            var dialog = new OpenFileDialog();
+            dialog.Filter = "動画ファイル|*.mp4;*.mkv;*.avi;*.ts;*.m2ts;*.iso|すべてのファイル|*.*";
+            if (dialog.ShowDialog() == true)
+            {
+                ClipData.FilePath = dialog.FileName;
+                FilePathBox.Text = dialog.FileName;
+                FilePathBox.GetBindingExpression(TextBox.TextProperty)?.UpdateSource();
+                FilePathErrorText.Text = "";
+
+                // ★追加: 自動生成がONならサムネイル作成
+                if (ClipData.IsAutoThumbnail)
+                {
+                    await UpdateThumbnailAsync();
+                }
+            }
+        }
+
+        // ★追加: 時間入力欄からフォーカスが外れた時
+        private async void Time_LostFocus(object sender, RoutedEventArgs e)
+        {
+            // 値を確定させる
+            if (sender is TextBox tb)
+            {
+                tb.GetBindingExpression(TextBox.TextProperty)?.UpdateSource();
+            }
+
+            // 自動生成がONなら、新しい時間に基づいて再生成
+            if (ClipData.IsAutoThumbnail)
+            {
+                await UpdateThumbnailAsync();
+            }
+        }
+
+        // ★追加: 「手動再生成」ボタン
+        private async void RegenerateThumbnail_Click(object sender, RoutedEventArgs e)
+        {
+            if (string.IsNullOrWhiteSpace(ClipData.FilePath)) return;
+            // 手動ボタンなのでフラグに関係なく実行
+            await UpdateThumbnailAsync();
+        }
+
+        // ★追加: 「ファイル選択」ボタン（任意の画像を設定）
+        private void SelectThumbnail_Click(object sender, RoutedEventArgs e)
+        {
+            if (!IsEditable) return;
+
+            var dialog = new OpenFileDialog();
+            dialog.Filter = "画像ファイル|*.jpg;*.png;*.bmp|すべてのファイル|*.*";
+            if (dialog.ShowDialog() == true)
+            {
+                ClipData.ThumbnailPath = dialog.FileName;
+
+                // 手動設定したので自動生成はOFFにする
+                ClipData.IsAutoThumbnail = false;
+            }
+        }
+
+        // ★追加: サムネイル生成のメインロジック
+        private async Task UpdateThumbnailAsync()
+        {
+            if (!System.IO.File.Exists(ClipData.FilePath)) return;
+
+            Mouse.OverrideCursor = Cursors.Wait;
+            try
+            {
+                var service = new ThumbnailService();
+                // 初回のみFFmpegのダウンロードが走る
+                await service.InitializeAsync();
+
+                // 動画情報を取得して長さを確認
+                var mediaInfo = await FFmpeg.GetMediaInfo(ClipData.FilePath);
+                var totalDurationMs = mediaInfo.Duration.TotalMilliseconds;
+
+                // 再生区間の中央を計算
+                long start = ClipData.StartTimeMs;
+                long end = ClipData.EndTimeMs ?? (long)totalDurationMs;
+
+                // 範囲チェック
+                if (start > totalDurationMs) start = 0;
+                if (end > totalDurationMs) end = (long)totalDurationMs;
+                if (end < start) end = start;
+
+                // 中央時刻
+                long middleTime = start + (end - start) / 2;
+
+                // 生成実行
+                string thumbPath = await service.GenerateThumbnailAsync(ClipData.FilePath, middleTime);
+
+                if (!string.IsNullOrEmpty(thumbPath))
+                {
+                    ClipData.ThumbnailPath = thumbPath;
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"サムネイル生成に失敗しました。\n\n詳細エラー:\n{ex.Message}", "エラー");
+            }
+            finally
+            {
+                Mouse.OverrideCursor = null;
             }
         }
     }

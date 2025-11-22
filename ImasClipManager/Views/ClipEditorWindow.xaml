@@ -23,6 +23,31 @@
 
         <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto">
             <StackPanel>
+                <Grid Margin="0,0,0,15" Background="#F5F5F5">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <Border Grid.Column="0" Width="160" Height="90" BorderBrush="Gray" BorderThickness="1" Background="Black" Margin="10">
+                        <Image Source="{Binding ClipData.ThumbnailPath}" Stretch="Uniform"/>
+                    </Border>
+
+                    <StackPanel Grid.Column="1" VerticalAlignment="Bottom" Margin="0,0,10,10">
+                        <TextBlock Text="サムネイル設定" FontWeight="Bold" Margin="0,0,0,5"/>
+
+                        <CheckBox Content="自動生成 (区間の中央)" 
+                                  IsChecked="{Binding ClipData.IsAutoThumbnail}" 
+                                  Margin="0,0,0,5" IsEnabled="{Binding IsEditable}"/>
+
+                        <StackPanel Orientation="Horizontal">
+                            <Button Content="手動再生成" Click="RegenerateThumbnail_Click" Width="100" Margin="0,0,10,0" 
+                                    IsEnabled="{Binding IsEditable}" ToolTip="現在の設定でサムネイルを作り直します"/>
+                            <Button Content="ファイル選択..." Click="SelectThumbnail_Click" Width="100" 
+                                    IsEnabled="{Binding IsEditable}"/>
+                        </StackPanel>
+                    </StackPanel>
+                </Grid>
                 <TextBlock Text="動画ファイルパス *:" FontWeight="Bold"/>
                 <Grid Margin="0,5,0,2">
                     <Grid.ColumnDefinitions>

@@ -68,6 +68,7 @@ namespace ImasClipManager.ViewModels
         {
             using (var db = new AppDbContext())
             {
+                //db.Database.EnsureDeleted();
                 db.Database.EnsureCreated();
                 var spaceList = db.Spaces.OrderBy(s => s.Id).ToList();
 

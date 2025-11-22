@@ -65,14 +65,17 @@ namespace ImasClipManager.Services
                     outputPath,
                     TimeSpan.FromMilliseconds(timeMs)
                 );
-
+                await conversion.Start();
                 return outputPath;
+            }
+            catch (Xabe.FFmpeg.Exceptions.ConversionException ce)
+            {
+                // ★追加: FFmpeg特有のエラー（引数間違いなど）の詳細を取得
+                throw new Exception($"FFmpeg変換エラー: {ce.Message}\nInput: {ce.InputParameters}", ce);
             }
             catch (Exception ex)
             {
-                // エラー時はログを出すか、空文字を返す
-                System.Diagnostics.Debug.WriteLine($"サムネイル生成エラー: {ex.Message}");
-                return string.Empty;
+                throw new Exception($"エラー: {ex.Message}", ex);
             }
         }
     }
