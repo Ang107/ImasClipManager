@@ -1,12 +1,13 @@
-﻿using System;
+﻿using ImasClipManager.Helpers;
+using ImasClipManager.Models;
+using ImasClipManager.ViewModels;
+using Microsoft.Win32;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
-using Microsoft.Win32;
-using ImasClipManager.Models;
-using ImasClipManager.Helpers;
 
 namespace ImasClipManager.Views
 {
@@ -34,8 +35,8 @@ namespace ImasClipManager.Views
         public EditorMode Mode { get; private set; }
 
         // 画面表示用プロパティ
-        public string WindowTitle { get; private set; }
-        public string ActionButtonText { get; private set; }
+        public string WindowTitle { get; private set; } = string.Empty;
+        public string ActionButtonText { get; private set; } = string.Empty;
         public bool IsEditable { get; private set; }
 
         // エラーメッセージ用（バインディング通知は簡易的に省略し、直接代入します）
@@ -101,6 +102,13 @@ namespace ImasClipManager.Views
                     CreatedAt = clip.CreatedAt,
                     UpdatedAt = DateTime.Now
                 };
+                if (clip.Performers != null)
+                {
+                    foreach (var p in clip.Performers)
+                    {
+                        ClipData.Performers.Add(p);
+                    }
+                }
             }
 
             // ブランドリスト作成
@@ -180,6 +188,35 @@ namespace ImasClipManager.Views
 
             this.DialogResult = true;
             this.Close();
+        }
+
+        // 画面表示用のプロパティ
+        public string PerformersDisplayText
+        {
+            get
+            {
+                if (ClipData.Performers == null || !ClipData.Performers.Any()) return "(未選択)";
+                // 単純結合
+                return string.Join(", ", ClipData.Performers.Select(p => p.Name));
+            }
+        }
+
+        private void SelectPerformers_Click(object sender, RoutedEventArgs e)
+        {
+            if (!IsEditable) return;
+
+            var vm = new PerformerSelectionViewModel(ClipData.Performers.ToList());
+            var window = new PerformerSelectionWindow(vm);
+            window.Owner = this;
+
+            if (window.ShowDialog() == true)
+            {
+                var selected = vm.GetSelectedPerformers();
+                ClipData.Performers.Clear();
+                foreach (var p in selected) ClipData.Performers.Add(p);
+
+                PerformersTextBox.Text = PerformersDisplayText;
+            }
         }
     }
 }

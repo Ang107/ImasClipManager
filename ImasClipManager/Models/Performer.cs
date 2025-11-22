@@ -3,19 +3,24 @@ using System.ComponentModel.DataAnnotations;
 
 namespace ImasClipManager.Models
 {
-    // 出演者マスター
     public class Performer
     {
         [Key]
         public int Id { get; set; }
 
-        public string Brand { get; set; } = string.Empty; // 765, ML, CG...
-        public string Name { get; set; } = string.Empty; // 声優名
-        public string NameYomi { get; set; } = string.Empty;
-        public string CharacterName { get; set; } = string.Empty; // キャラ名
-        public string CharacterYomi { get; set; } = string.Empty;
+        // 表示名そのもの (例: "天海 春香(cv: 中村 繪里子)")
+        public string Name { get; set; } = string.Empty;
 
-        // Clipとの多対多リレーション
+        // 読み (例: "あまみはるか なかむらえりこ")
+        public string Yomi { get; set; } = string.Empty;
+
+        // この出演者の形式 (絞り込みやソートに使用)
+        public LiveType LiveType { get; set; } = LiveType.Seiyuu;
+
+        // ブランド (絞り込みに使用)
+        public BrandType Brand { get; set; } = BrandType.None;
+
+        // Clipとのリレーション (シンプルに戻ります)
         public virtual ICollection<Clip> Clips { get; set; } = new List<Clip>();
     }
 }

@@ -6,13 +6,28 @@
         Title="ImasClipManager" Height="1000" Width="1800" 
         WindowStartupLocation="CenterScreen"
         WindowState="Maximized">
+    
     <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="250"/>
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
 
-        <Grid Grid.Column="0" Background="#F0F0F0">
+        <Menu Grid.Row="0" Grid.ColumnSpan="2" Background="White" BorderBrush="LightGray" BorderThickness="0,0,0,1" Padding="5">
+            <MenuItem Header="ファイル(_F)">
+                <MenuItem Header="出演者データをインポート..." Command="{Binding ImportPerformersCommand}"/>
+                <MenuItem Header="出演者データをエクスポート..." Command="{Binding ExportPerformersCommand}"/>
+                <Separator/>
+                <MenuItem Header="終了(_X)" Click="MenuItem_Exit_Click"/>
+            </MenuItem>
+        </Menu>
+
+        <Grid Grid.Row="1" Grid.Column="0" Background="#F0F0F0">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="*"/>
@@ -58,7 +73,7 @@
                     Margin="10" Padding="5" Height="35"/>
         </Grid>
 
-        <Grid Grid.Column="1" Margin="10">
+        <Grid Grid.Row="1" Grid.Column="1" Margin="10">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="*"/>
@@ -142,7 +157,7 @@
                     <DataGridTextColumn Header="公演日" Binding="{Binding ConcertDate, StringFormat=yyyy/MM/dd}" Width="0.8*" ElementStyle="{StaticResource CenterTextStyle}"/>
                     <DataGridTextColumn Header="形式" Binding="{Binding LiveType, Converter={StaticResource LiveTypeConv}}" Width="0.6*" ElementStyle="{StaticResource CenterTextStyle}"/>
                     <DataGridTextColumn Header="ブランド" Binding="{Binding Brands, Converter={StaticResource BrandTypeConv}}" Width="1.2*" ElementStyle="{StaticResource CenterTextStyle}"/>
-
+                    <DataGridTextColumn Header="出演者" Binding="{Binding Converter={StaticResource ClipPerformersConv}}" Width="2*" ElementStyle="{StaticResource LeftTextStyle}"/>
                     <DataGridTextColumn Header="歌詞" Binding="{Binding Lyrics}" Width="2*" ElementStyle="{StaticResource LeftTextStyle}"/>
                     <DataGridTextColumn Header="備考" Binding="{Binding Remarks}" Width="1.5*" ElementStyle="{StaticResource LeftTextStyle}"/>
 

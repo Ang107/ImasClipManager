@@ -26,7 +26,7 @@ namespace ImasClipManager.Helpers
             var names = new List<string>();
 
             // フラグ判定（BrandTypeは[Flags]なので複数選択があり得る）
-            if (brand.HasFlag(BrandType.Original)) names.Add("765PRO AS");
+            if (brand.HasFlag(BrandType.Imas)) names.Add("765プロオールスターズ");
             if (brand.HasFlag(BrandType.DS)) names.Add("ディアリースターズ");
             if (brand.HasFlag(BrandType.Cinderella)) names.Add("シンデレラガールズ");
             if (brand.HasFlag(BrandType.Million)) names.Add("ミリオンライブ！");

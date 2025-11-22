@@ -9,6 +9,9 @@ using ImasClipManager.Models;
 using ImasClipManager.Data;
 using ImasClipManager.Views;
 using Microsoft.EntityFrameworkCore; // Include用
+using Microsoft.Win32; // OpenFileDialog, SaveFileDialog用
+using ImasClipManager.Services; // 追加
+using System.Text; // 追加
 
 namespace ImasClipManager.ViewModels
 {
@@ -201,9 +204,15 @@ namespace ImasClipManager.ViewModels
 
             using (var db = new AppDbContext())
             {
-                clip.PlayCount++;
-                db.Clips.Update(clip);
-                db.SaveChanges();
+                var target = db.Clips.Find(clip.Id);
+                if (target != null)
+                {
+                    target.PlayCount++;
+                    db.SaveChanges(); // Performers は読み込んでいないので影響しない
+
+                    // 画面表示用のオブジェクトも同期させておく
+                    clip.PlayCount = target.PlayCount;
+                }
             }
 
             _clipsView?.Refresh();
@@ -288,8 +297,30 @@ namespace ImasClipManager.ViewModels
         {
             using (var db = new AppDbContext())
             {
-                // Performersの重複登録を防ぐため、既存のPerformerがあればAttachする処理が必要だが、
-                // 現状は簡易的に追加のみとする（詳細実装時に修正推奨）
+                // ★重要: 出演者データは既にDBに存在するため、
+                // "新規追加(Added)"扱いにならないように、明示的にアタッチ(Attach)します。
+                // これを行わないと、既存の出演者をもう一度INSERTしようとしてエラーになります。
+                if (clip.Performers != null)
+                {
+                    foreach (var p in clip.Performers)
+                    {
+                        db.Attach(p); // これで「変更なし(Unchanged)」の状態として認識されます
+                    }
+                }
+
+                // Spaceが無ければ作る（簡易対策）
+                if (!db.Spaces.Any())
+                {
+                    db.Spaces.Add(new Space { Name = "Default" });
+                    db.SaveChanges();
+                }
+
+                // スペースIDの紐づけ（念のため）
+                if (clip.SpaceId == 0 && SelectedSpace != null)
+                {
+                    clip.SpaceId = SelectedSpace.Id;
+                }
+
                 db.Clips.Add(clip);
                 db.SaveChanges();
             }
@@ -299,8 +330,143 @@ namespace ImasClipManager.ViewModels
         {
             using (var db = new AppDbContext())
             {
-                db.Clips.Update(clip);
-                db.SaveChanges();
+                // 編集の場合、リレーション（多対多）を安全に更新するために
+                // 一度DBから現在の状態を読み込んでから、差分を適用する方法が最も確実です。
+
+                var existingClip = db.Clips
+                                     .Include(c => c.Performers) // 現在の出演者紐づけも含めてロード
+                                     .FirstOrDefault(c => c.Id == clip.Id);
+
+                if (existingClip != null)
+                {
+                    // 1. クリップ本体の値（タイトルや日付など）をコピーして更新
+                    db.Entry(existingClip).CurrentValues.SetValues(clip);
+
+                    // 2. 出演者リストの更新
+                    // 一旦紐づけをクリア
+                    existingClip.Performers.Clear();
+
+                    // 画面で選択された出演者を再登録
+                    foreach (var p in clip.Performers)
+                    {
+                        // ここでも「既存のデータだよ」と教えるためにAttachを使いたいのですが、
+                        // 同じコンテキスト内ですでに追跡されているか確認してから行います。
+                        var trackedPerformer = db.Performers.Local.FirstOrDefault(x => x.Id == p.Id);
+
+                        if (trackedPerformer != null)
+                        {
+                            // 既に追跡中ならそれを使う
+                            existingClip.Performers.Add(trackedPerformer);
+                        }
+                        else
+                        {
+                            // 追跡されていないならAttachして追加
+                            db.Attach(p);
+                            existingClip.Performers.Add(p);
+                        }
+                    }
+
+                    db.SaveChanges();
+                }
+            }
+        }
+
+        // --- CSV操作コマンド ---
+
+        [RelayCommand]
+        public void ExportPerformers()
+        {
+            var dialog = new SaveFileDialog
+            {
+                Filter = "CSVファイル (*.csv)|*.csv",
+                FileName = "performers.csv"
+            };
+
+            if (dialog.ShowDialog() == true)
+            {
+                try // ★追加: エラー監視開始
+                {
+                    using (var db = new AppDbContext())
+                    {
+                        var list = db.Performers.OrderBy(p => p.Id).ToList();
+                        var service = new CsvDataService();
+                        service.ExportPerformers(dialog.FileName, list);
+                    }
+                    MessageBox.Show("エクスポートが完了しました。", "完了", MessageBoxButton.OK, MessageBoxImage.Information);
+                }
+                catch (System.IO.IOException) // ★追加: ファイルロックのエラーを捕捉
+                {
+                    MessageBox.Show("ファイルが開かれているため保存できませんでした。\nExcelなどを閉じてから再試行してください。",
+                                    "保存エラー", MessageBoxButton.OK, MessageBoxImage.Warning);
+                }
+                catch (System.Exception ex) // ★追加: その他の予期せぬエラー
+                {
+                    MessageBox.Show($"エクスポートに失敗しました。\n{ex.Message}", "エラー", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+        }
+
+        [RelayCommand]
+        public void ImportPerformers()
+        {
+            var dialog = new OpenFileDialog
+            {
+                Filter = "CSVファイル (*.csv)|*.csv"
+            };
+
+            if (dialog.ShowDialog() == true)
+            {
+                try
+                {
+                    var service = new CsvDataService();
+                    var records = service.ImportPerformers(dialog.FileName);
+
+                    using (var db = new AppDbContext())
+                    {
+                        int addedCount = 0;
+                        int updatedCount = 0;
+
+                        // DBの全データをメモリにロード
+                        var dbPerformers = db.Performers.ToList();
+
+                        foreach (var item in records)
+                        {
+                            // 名前(Display Name)が一致する既存データを探す
+                            var existing = dbPerformers.FirstOrDefault(p => p.Name == item.Name);
+
+                            if (existing != null)
+                            {
+                                // ★一致するなら更新 (IDは変えずに中身をCSVの値で上書き)
+                                existing.Yomi = item.Yomi;
+                                existing.LiveType = item.LiveType;
+                                existing.Brand = item.Brand;
+                                updatedCount++;
+                            }
+                            else
+                            {
+                                // ★一致しないなら新規追加
+                                item.Id = 0; // IDは自動採番させる
+                                db.Performers.Add(item);
+
+                                // CSV内に同じ名前が複数行あった場合、後続の行で「更新」扱いにするためリストにも追加しておく
+                                dbPerformers.Add(item);
+                                addedCount++;
+                            }
+                        }
+
+                        db.SaveChanges();
+                        MessageBox.Show($"{records.Count} 件処理しました。\n追加: {addedCount} 件\n更新: {updatedCount} 件", "インポート完了");
+                    }
+                }
+                catch (System.IO.IOException)
+                {
+                    MessageBox.Show("ファイルが開かれているため読み込めませんでした。\nExcelなどを閉じてから再試行してください。",
+                                    "読み込みエラー", MessageBoxButton.OK, MessageBoxImage.Warning);
+                }
+                catch (System.Exception ex)
+                {
+                    MessageBox.Show($"インポートに失敗しました。\n{ex.Message}", "エラー", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
             }
         }
     }

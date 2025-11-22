@@ -26,5 +26,9 @@ namespace ImasClipManager
                 vm.PlayClip(selectedClip);
             }
         }
+        private void MenuItem_Exit_Click(object sender, RoutedEventArgs e)
+        {
+            this.Close();
+        }
     }
 }

@@ -102,6 +102,26 @@
                     </ItemsControl>
                 </Border>
 
+                <TextBlock Text="出演者:" FontWeight="Bold" Margin="0,15,0,0"/>
+                <Grid Margin="0,5,0,15">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <TextBox x:Name="PerformersTextBox" 
+                             Text="{Binding PerformersDisplayText, Mode=OneWay}"
+                             IsReadOnly="True" 
+                             VerticalContentAlignment="Center" 
+                             Height="50" TextWrapping="Wrap" 
+                             VerticalScrollBarVisibility="Auto"/>
+
+                    <Button Grid.Column="1" Content="選択..." Width="60" Margin="5,0,0,0" 
+                            Click="SelectPerformers_Click" 
+                            IsEnabled="{Binding IsEditable}" 
+                            VerticalAlignment="Top" Height="25"/>
+                </Grid>
+
                 <TextBlock Text="歌詞:" FontWeight="Bold"/>
                 <TextBox Text="{Binding ClipData.Lyrics}" Height="60" AcceptsReturn="True" VerticalScrollBarVisibility="Auto" Margin="0,5,0,15" IsEnabled="{Binding IsEditable}"/>
 

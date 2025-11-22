@@ -9,7 +9,7 @@ namespace ImasClipManager.Models
     public enum BrandType
     {
         None = 0,
-        Original = 1 << 0,   // 765PRO ALLSTARS
+        Imas = 1 << 0,   // 765プロオールスターズ
         DS = 1 << 1,         // ディアリースターズ
         Cinderella = 1 << 2, // シンデレラガールズ
         Million = 1 << 3,    // ミリオンライブ！
@@ -114,6 +114,7 @@ namespace ImasClipManager.Models
         public string SongTitle { get; set; } = string.Empty;
 
         public string ThumbnailPath { get; set; } = string.Empty;
+        public bool IsAutoThumbnail { get; set; } = true;
         public int PlayCount { get; set; } = 0;
         public string Lyrics { get; set; } = string.Empty;
         public string Remarks { get; set; } = string.Empty;
