@@ -71,7 +71,15 @@
                     <StackPanel Grid.Column="2">
                         <TextBlock Text="ライブ形式:" FontWeight="Bold"/>
                         <ComboBox ItemsSource="{Binding Source={StaticResource LiveTypeEnum}}" 
-                                  SelectedItem="{Binding ClipData.LiveType}" Margin="0,5,0,0" IsEnabled="{Binding IsEditable}"/>
+                            SelectedItem="{Binding ClipData.LiveType}" 
+                            Margin="0,5,0,0" 
+                            IsEnabled="{Binding IsEditable}">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding Converter={StaticResource LiveTypeConv}}"/>
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
                     </StackPanel>
                 </Grid>
 

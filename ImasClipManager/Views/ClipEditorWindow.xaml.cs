@@ -6,6 +6,7 @@ using System.Windows;
 using System.Windows.Controls;
 using Microsoft.Win32;
 using ImasClipManager.Models;
+using ImasClipManager.Helpers;
 
 namespace ImasClipManager.Views
 {
@@ -108,32 +109,14 @@ namespace ImasClipManager.Views
                             .Where(b => b != BrandType.None)
                             .Select(b => new BrandSelection
                             {
-                                Name = GetBrandLabel(b),
+                                Name = b.ToDisplayString(),
                                 Value = b,
                                 IsSelected = ClipData.Brands.HasFlag(b),
-                                IsEnabled = IsEditable // 詳細モードなら無効化
+                                IsEnabled = IsEditable
                             })
                             .ToList();
 
             this.DataContext = this;
-        }
-
-        private string GetBrandLabel(BrandType brand)
-        {
-            return brand switch
-            {
-                BrandType.Original => "765PRO AS",
-                BrandType.DS => "ディアリースターズ",
-                BrandType.Cinderella => "シンデレラガールズ",
-                BrandType.Million => "ミリオンライブ！",
-                BrandType.SideM => "SideM",
-                BrandType.Shiny => "シャイニーカラーズ",
-                BrandType.Valiv => "ヴイアライヴ",
-                BrandType.Gakuen => "学園アイドルマスター",
-                BrandType.Goudou => "合同ライブ",
-                BrandType.Other => "その他",
-                _ => brand.ToString()
-            };
         }
 
         private void SelectFile_Click(object sender, RoutedEventArgs e)

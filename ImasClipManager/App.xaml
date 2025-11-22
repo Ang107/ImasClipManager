@@ -2,8 +2,10 @@
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:local="clr-namespace:ImasClipManager"
+             xmlns:converters="clr-namespace:ImasClipManager.Converters" 
              StartupUri="MainWindow.xaml">
     <Application.Resources>
-         
+        <converters:LiveTypeToStringConverter x:Key="LiveTypeConv"/>
+        <converters:BrandTypeToStringConverter x:Key="BrandTypeConv"/>
     </Application.Resources>
 </Application>
