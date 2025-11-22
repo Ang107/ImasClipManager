@@ -1,0 +1,110 @@
+﻿<Window x:Class="ImasClipManager.Views.ClipEditorWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:sys="clr-namespace:System;assembly=mscorlib"
+        xmlns:models="clr-namespace:ImasClipManager.Models"
+        Title="{Binding WindowTitle}" Height="650" Width="600"
+        WindowStartupLocation="CenterOwner">
+
+    <Window.Resources>
+        <ObjectDataProvider x:Key="LiveTypeEnum" MethodName="GetValues" ObjectType="{x:Type sys:Enum}">
+            <ObjectDataProvider.MethodParameters>
+                <x:Type TypeName="models:LiveType"/>
+            </ObjectDataProvider.MethodParameters>
+        </ObjectDataProvider>
+
+    </Window.Resources>
+
+    <Grid Margin="15">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto">
+            <StackPanel>
+                <TextBlock Text="動画ファイルパス *:" FontWeight="Bold"/>
+                <Grid Margin="0,5,0,2">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBox x:Name="FilePathBox" Text="{Binding ClipData.FilePath}" 
+                             VerticalContentAlignment="Center" IsEnabled="{Binding IsEditable}"/>
+                    <Button Grid.Column="1" Content="..." Width="30" Margin="5,0,0,0" 
+                            Click="SelectFile_Click" IsEnabled="{Binding IsEditable}"/>
+                </Grid>
+                <TextBlock x:Name="FilePathErrorText" Foreground="Red" FontWeight="Bold" Margin="0,0,0,15"/>
+
+                <Grid Margin="0,0,0,15">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="10"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Grid.Column="0">
+                        <TextBlock Text="再生開始 (mm:ss または hh:mm:ss, 空白で最初から):" FontWeight="Bold" FontSize="11"/>
+                        <TextBox Text="{Binding ClipData.StartTimeStr}" Margin="0,5,0,0" IsEnabled="{Binding IsEditable}"/>
+                    </StackPanel>
+                    <StackPanel Grid.Column="2">
+                        <TextBlock Text="再生終了 (mm:ss または hh:mm:ss, 空白で最後まで):" FontWeight="Bold" FontSize="11"/>
+                        <TextBox Text="{Binding ClipData.EndTimeStr}" Margin="0,5,0,0" IsEnabled="{Binding IsEditable}"/>
+                    </StackPanel>
+                </Grid>
+
+                <TextBlock Text="曲名:" FontWeight="Bold"/>
+                <TextBox Text="{Binding ClipData.SongTitle}" Margin="0,5,0,15" IsEnabled="{Binding IsEditable}"/>
+
+                <TextBlock Text="公演名:" FontWeight="Bold"/>
+                <TextBox Text="{Binding ClipData.ConcertName}" Margin="0,5,0,15" IsEnabled="{Binding IsEditable}"/>
+
+                <Grid Margin="0,0,0,15">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="10"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Grid.Column="0">
+                        <TextBlock Text="公演日:" FontWeight="Bold"/>
+                        <DatePicker SelectedDate="{Binding ClipData.ConcertDate}" Margin="0,5,0,0" IsEnabled="{Binding IsEditable}"/>
+                    </StackPanel>
+                    <StackPanel Grid.Column="2">
+                        <TextBlock Text="ライブ形式:" FontWeight="Bold"/>
+                        <ComboBox ItemsSource="{Binding Source={StaticResource LiveTypeEnum}}" 
+                                  SelectedItem="{Binding ClipData.LiveType}" Margin="0,5,0,0" IsEnabled="{Binding IsEditable}"/>
+                    </StackPanel>
+                </Grid>
+
+                <TextBlock Text="ブランド:" FontWeight="Bold"/>
+                <Border BorderBrush="Gray" BorderThickness="1" Margin="0,5,0,15" Padding="5">
+                    <ItemsControl ItemsSource="{Binding BrandList}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <WrapPanel Orientation="Horizontal"/>
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <CheckBox Content="{Binding Name}" 
+                                          IsChecked="{Binding IsSelected}" 
+                                          IsEnabled="{Binding IsEnabled}"
+                                          Margin="0,0,15,5"/>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </Border>
+
+                <TextBlock Text="歌詞:" FontWeight="Bold"/>
+                <TextBox Text="{Binding ClipData.Lyrics}" Height="60" AcceptsReturn="True" VerticalScrollBarVisibility="Auto" Margin="0,5,0,15" IsEnabled="{Binding IsEditable}"/>
+
+                <TextBlock Text="備考:" FontWeight="Bold"/>
+                <TextBox Text="{Binding ClipData.Remarks}" Height="60" AcceptsReturn="True" VerticalScrollBarVisibility="Auto" Margin="0,5,0,0" IsEnabled="{Binding IsEditable}"/>
+            </StackPanel>
+        </ScrollViewer>
+
+        <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,10,0,0">
+            <Button Content="キャンセル" Width="100" Margin="0,0,10,0" IsCancel="True"/>
+            <Button Content="{Binding ActionButtonText}" Width="100" Click="Action_Click" IsDefault="True"/>
+        </StackPanel>
+    </Grid>
+</Window>
