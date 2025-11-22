@@ -269,35 +269,41 @@ namespace ImasClipManager.Views
         }
 
         // ★追加: サムネイル生成のメインロジック
+        // サムネイル生成のメインロジック
         private async Task UpdateThumbnailAsync()
         {
             if (!System.IO.File.Exists(ClipData.FilePath)) return;
 
             Mouse.OverrideCursor = Cursors.Wait;
+            IMediaInfo mediaInfo = null; // メディア情報を保持する変数
+
             try
             {
                 var service = new ThumbnailService();
-                // 初回のみFFmpegのダウンロードが走る
                 await service.InitializeAsync();
 
-                // 動画情報を取得して長さを確認
-                var mediaInfo = await FFmpeg.GetMediaInfo(ClipData.FilePath);
+                // 1. mediaInfoの取得をバックグラウンドで行う (フリーズ防止)
+                mediaInfo = await Task.Run(() => FFmpeg.GetMediaInfo(ClipData.FilePath));
+
                 var totalDurationMs = mediaInfo.Duration.TotalMilliseconds;
 
-                // 再生区間の中央を計算
+                // 時間計算
                 long start = ClipData.StartTimeMs;
                 long end = ClipData.EndTimeMs ?? (long)totalDurationMs;
 
-                // 範囲チェック
+                // 範囲チェック (省略)
                 if (start > totalDurationMs) start = 0;
                 if (end > totalDurationMs) end = (long)totalDurationMs;
                 if (end < start) end = start;
 
-                // 中央時刻
                 long middleTime = start + (end - start) / 2;
 
-                // 生成実行
-                string thumbPath = await service.GenerateThumbnailAsync(ClipData.FilePath, middleTime);
+                // 2. サムネイル生成をバックグラウンドで行う (フリーズ防止)
+                string thumbPath = await Task.Run(async () =>
+                {
+                    // サービス側のメソッドを呼び出す (mediaInfoを渡す)
+                    return await service.GenerateThumbnailAsync(ClipData.FilePath, mediaInfo, middleTime);
+                });
 
                 if (!string.IsNullOrEmpty(thumbPath))
                 {
@@ -306,7 +312,8 @@ namespace ImasClipManager.Views
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"サムネイル生成に失敗しました。\n\n詳細エラー:\n{ex.Message}", "エラー");
+                // エラー内容を表示 (FFmpegエラーは詳細なログが出るはず)
+                MessageBox.Show($"サムネイル生成処理中にエラーが発生しました。\n\n詳細エラー:\n{ex.Message}", "エラー");
             }
             finally
             {
