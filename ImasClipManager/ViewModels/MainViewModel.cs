@@ -13,8 +13,6 @@ using Microsoft.Win32; // OpenFileDialog, SaveFileDialog用
 using ImasClipManager.Services; // 追加
 using System.Text; // 追加
 using System.Threading.Tasks;
-using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
 
 namespace ImasClipManager.ViewModels
 {
