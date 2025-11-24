@@ -71,9 +71,9 @@ namespace ImasClipManager.ViewModels
             // イベントハンドラ登録
             MediaPlayer.TimeChanged += MediaPlayer_TimeChanged;
             MediaPlayer.LengthChanged += MediaPlayer_LengthChanged;
-            MediaPlayer.Playing += (s, e) => _dispatcher.Invoke(() => IsPlaying = true);
-            MediaPlayer.Paused += (s, e) => _dispatcher.Invoke(() => IsPlaying = false);
-            MediaPlayer.Stopped += (s, e) => _dispatcher.Invoke(() => IsPlaying = false);
+            MediaPlayer.Playing += (s, e) => _dispatcher.InvokeAsync(() => IsPlaying = true);
+            MediaPlayer.Paused += (s, e) => _dispatcher.InvokeAsync(() => IsPlaying = false);
+            MediaPlayer.Stopped += (s, e) => _dispatcher.InvokeAsync(() => IsPlaying = false);
             MediaPlayer.EndReached += MediaPlayer_EndReached;
 
             // メディアロード
@@ -81,13 +81,26 @@ namespace ImasClipManager.ViewModels
             media.AddOption(":avcodec-hw=any");
 
             MediaPlayer.Media = media;
-            MediaPlayer.Play();
+            //MediaPlayer.Play();
+            //MediaPlayer.Volume = Volume;
+
+            //// 開始位置へシーク
+            //if (_clipStartMs > 0)
+            //{
+            //    // 少し待ってからシーク（即時だと効かない場合があるため）
+            //    Task.Delay(100).ContinueWith(_ => MediaPlayer.Time = _clipStartMs);
+            //}
+        }
+
+        public void Loaded()
+        {
             MediaPlayer.Volume = Volume;
+            MediaPlayer.Play();
 
             // 開始位置へシーク
             if (_clipStartMs > 0)
             {
-                // 少し待ってからシーク（即時だと効かない場合があるため）
+                // 少し待ってからシーク
                 Task.Delay(100).ContinueWith(_ => MediaPlayer.Time = _clipStartMs);
             }
         }
@@ -110,7 +123,7 @@ namespace ImasClipManager.ViewModels
 
         private void MediaPlayer_LengthChanged(object? sender, MediaPlayerLengthChangedEventArgs e)
         {
-            _dispatcher.Invoke(() =>
+            _dispatcher.InvokeAsync(() =>
             {
                 _fileDurationMs = e.Length;
 
@@ -150,7 +163,7 @@ namespace ImasClipManager.ViewModels
                 }
             }
 
-            _dispatcher.Invoke(() =>
+            _dispatcher.InvokeAsync(() =>
             {
                 if (_isDraggingSeek) return;
                 // 相対時間を計算 (現在 - 開始)

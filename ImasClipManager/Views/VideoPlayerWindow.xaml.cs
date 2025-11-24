@@ -19,7 +19,7 @@ namespace ImasClipManager.Views
 
             // ViewModelのプロパティ変更通知を購読してウィンドウの状態を変える
             _viewModel.PropertyChanged += ViewModel_PropertyChanged;
-
+            this.Loaded += (s, e) => _viewModel.Loaded();
             this.Closed += (s, e) =>
             {
                 _viewModel.PropertyChanged -= ViewModel_PropertyChanged;
