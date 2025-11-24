@@ -11,6 +11,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;   // Cursor用
 using Xabe.FFmpeg;            // IMediaInfo用
+using System.Diagnostics;
 
 namespace ImasClipManager.Views
 {
@@ -42,13 +43,15 @@ namespace ImasClipManager.Views
         public string ActionButtonText { get; private set; } = string.Empty;
         public bool IsEditable { get; private set; }
 
+        private double _videoDurationMs = 0;
+
         // エラーメッセージ用（バインディング通知は簡易的に省略し、直接代入します）
         // 本来はINotifyPropertyChangedが必要ですが、CodeBehindで直接操作します
 
         public ClipEditorWindow(Clip? clip = null, EditorMode mode = EditorMode.Add)
         {
             InitializeComponent();
-
+            this.KeyDown += Window_KeyDown;
             Mode = mode;
 
             // モードに応じた設定
@@ -102,6 +105,7 @@ namespace ImasClipManager.Views
                     Remarks = clip.Remarks,
                     PlayCount = clip.PlayCount,
                     ThumbnailPath = clip.ThumbnailPath,
+                    IsAutoThumbnail = clip.IsAutoThumbnail,
                     CreatedAt = clip.CreatedAt,
                     UpdatedAt = DateTime.Now
                 };
@@ -128,42 +132,170 @@ namespace ImasClipManager.Views
                             .ToList();
 
             this.DataContext = this;
+
+            if (!string.IsNullOrEmpty(ClipData.FilePath) && System.IO.File.Exists(ClipData.FilePath))
+            {
+                this.Loaded += async (s, e) => await LoadVideoDurationAsync();
+            }
+        }
+
+        private async Task LoadVideoDurationAsync()
+        {
+            try
+            {
+                if (!System.IO.File.Exists(ClipData.FilePath)) return;
+                var mediaInfo = await FFmpeg.GetMediaInfo(ClipData.FilePath);
+                _videoDurationMs = mediaInfo.Duration.TotalMilliseconds;
+
+                // 長さが取れたら一度バリデーションしておく
+                ValidateTimes();
+            }
+            catch
+            {
+                _videoDurationMs = 0;
+            }
+        }
+
+        private bool TryParseTime(string input, out long resultMs)
+        {
+            resultMs = 0;
+            if (string.IsNullOrWhiteSpace(input)) return true; // 空白はOK(0またはnull扱い)
+
+            // mm:ss 形式の独自対応
+            var parts = input.Split(':');
+            if (parts.Length == 2)
+            {
+                if (double.TryParse(parts[0], out double mm) && double.TryParse(parts[1], out double ss))
+                {
+                    resultMs = (long)(TimeSpan.FromMinutes(mm) + TimeSpan.FromSeconds(ss)).TotalMilliseconds;
+                    return true;
+                }
+            }
+
+            // 標準的な TimeSpan パース (hh:mm:ss など)
+            if (TimeSpan.TryParse(input, out var ts))
+            {
+                resultMs = (long)ts.TotalMilliseconds;
+                return true;
+            }
+
+            return false;
+        }
+
+        private bool ValidateTimes()
+        {
+            bool isValid = true;
+            long startMs = 0;
+            long? endMs = null;
+
+            // 1. 書式チェック (開始)
+            if (!TryParseTime(StartTimeBox.Text, out startMs))
+            {
+                StartTimeErrorText.Text = "※ 書式が不正です (例 10:30)";
+                isValid = false;
+            }
+            else
+            {
+                StartTimeErrorText.Text = "";
+            }
+
+            // 2. 書式チェック (終了)
+            if (string.IsNullOrWhiteSpace(EndTimeBox.Text))
+            {
+                endMs = null;
+                EndTimeErrorText.Text = "";
+            }
+            else
+            {
+                if (!TryParseTime(EndTimeBox.Text, out long tempEnd))
+                {
+                    EndTimeErrorText.Text = "※ 書式が不正です";
+                    isValid = false;
+                }
+                else
+                {
+                    endMs = tempEnd;
+                    EndTimeErrorText.Text = "";
+                }
+            }
+
+            if (!isValid) return false;
+
+            // 3. 論理チェック (開始 < 終了)
+            if (endMs.HasValue && startMs >= endMs.Value)
+            {
+                EndTimeErrorText.Text = "※ 終了時間は開始時間より後にして下さい";
+                isValid = false;
+            }
+
+            // 4. 論理チェック (動画の長さとの比較)
+            if (_videoDurationMs > 0)
+            {
+                if (startMs > _videoDurationMs)
+                {
+                    StartTimeErrorText.Text = "※ 動画の長さを超えています";
+                    isValid = false;
+                }
+
+                if (endMs.HasValue && endMs.Value > _videoDurationMs)
+                {
+                    EndTimeErrorText.Text = "※ 動画の長さを超えています";
+                    isValid = false;
+                }
+            }
+
+            return isValid;
         }
 
 
+        private void Window_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Enter)
+            {
+                // フォーカスが当たっているのがTextBoxの場合
+                if (Keyboard.FocusedElement is TextBox textBox)
+                {
+                    // 複数行入力(AcceptsReturn=True)の場合は、普通の改行として扱うので何もしない
+                    if (textBox.AcceptsReturn) return;
+
+                    // 単一行入力の場合は、次のコントロールへフォーカス移動（＝入力完了）
+                    var request = new TraversalRequest(FocusNavigationDirection.Next);
+                    if (textBox.MoveFocus(request))
+                    {
+                        e.Handled = true; // イベントを処理済みにする（ビープ音防止など）
+                    }
+                }
+            }
+        }
+
+        // 既存メソッドの修正: 保存ボタンクリック時
         private void Action_Click(object sender, RoutedEventArgs e)
         {
-            // 詳細モードならバリデーションなしで閉じる
             if (Mode == EditorMode.Detail)
             {
-                this.DialogResult = false; // 保存しないのでfalse (あるいはCancel扱い)
+                this.DialogResult = false;
                 this.Close();
                 return;
             }
 
-            // バリデーション
-            bool hasError = false;
+            // ★追加: 保存前に強制バリデーション
+            // 時間のバリデーション (エラーメッセージも更新される)
+            if (!ValidateTimes())
+            {
+                return; // エラーがあれば保存させない
+            }
 
-            // ファイルパスエラーを直下のTextBlockに表示
+            // ファイルパス必須チェック
             if (string.IsNullOrWhiteSpace(ClipData.FilePath))
             {
                 FilePathErrorText.Text = "※ 動画ファイルパスは必須です";
-                hasError = true;
-                // スクロール等で見えるようにフォーカスを当てる
                 FilePathBox.Focus();
+                return;
             }
             else
             {
                 FilePathErrorText.Text = "";
             }
-
-            if (ClipData.EndTimeMs.HasValue && ClipData.EndTimeMs.Value <= ClipData.StartTimeMs)
-            {
-                MessageBox.Show("終了時刻は開始時刻より後である必要があります。", "入力エラー", MessageBoxButton.OK, MessageBoxImage.Warning);
-                hasError = true;
-            }
-
-            if (hasError) return;
 
             // ブランド反映
             var selectedBrands = BrandType.None;
@@ -183,8 +315,8 @@ namespace ImasClipManager.Views
             get
             {
                 if (ClipData.Performers == null || !ClipData.Performers.Any()) return "(未選択)";
-                // 単純結合
-                return string.Join(", ", ClipData.Performers.Select(p => p.Name));
+                // ★変更: カンマ区切りではなく、改行区切りにする
+                return string.Join(Environment.NewLine, ClipData.Performers.Select(p => p.Name));
             }
         }
 
@@ -219,7 +351,7 @@ namespace ImasClipManager.Views
                 FilePathBox.Text = dialog.FileName;
                 FilePathBox.GetBindingExpression(TextBox.TextProperty)?.UpdateSource();
                 FilePathErrorText.Text = "";
-
+                await LoadVideoDurationAsync();
                 // ★追加: 自動生成がONならサムネイル作成
                 if (ClipData.IsAutoThumbnail)
                 {
@@ -236,7 +368,7 @@ namespace ImasClipManager.Views
             {
                 tb.GetBindingExpression(TextBox.TextProperty)?.UpdateSource();
             }
-
+            ValidateTimes();
             // 自動生成がONなら、新しい時間に基づいて再生成
             if (ClipData.IsAutoThumbnail)
             {
@@ -275,34 +407,35 @@ namespace ImasClipManager.Views
             if (!System.IO.File.Exists(ClipData.FilePath)) return;
 
             Mouse.OverrideCursor = Cursors.Wait;
-            IMediaInfo mediaInfo = null; // メディア情報を保持する変数
 
             try
             {
                 var service = new ThumbnailService();
                 await service.InitializeAsync();
 
-                // 1. mediaInfoの取得をバックグラウンドで行う (フリーズ防止)
-                mediaInfo = await Task.Run(() => FFmpeg.GetMediaInfo(ClipData.FilePath));
+                long targetTimeMs = ClipData.StartTimeMs;
 
-                var totalDurationMs = mediaInfo.Duration.TotalMilliseconds;
+                // 自動生成の場合は、GetMediaInfo で長さを取得して中央時間を計算
+                if (ClipData.IsAutoThumbnail)
+                {
+                    // ユーザー報告: GetMediaInfo は高速なのでそのまま使用
+                    var mediaInfo = await Task.Run(() => FFmpeg.GetMediaInfo(ClipData.FilePath));
+                    var totalDurationMs = mediaInfo.Duration.TotalMilliseconds;
 
-                // 時間計算
-                long start = ClipData.StartTimeMs;
-                long end = ClipData.EndTimeMs ?? (long)totalDurationMs;
+                    long start = ClipData.StartTimeMs;
+                    long end = ClipData.EndTimeMs ?? (long)totalDurationMs;
 
-                // 範囲チェック (省略)
-                if (start > totalDurationMs) start = 0;
-                if (end > totalDurationMs) end = (long)totalDurationMs;
-                if (end < start) end = start;
+                    if (start > totalDurationMs) start = 0;
+                    if (end > totalDurationMs) end = (long)totalDurationMs;
+                    if (end < start) end = start;
 
-                long middleTime = start + (end - start) / 2;
+                    targetTimeMs = start + (end - start) / 2;
+                }
 
-                // 2. サムネイル生成をバックグラウンドで行う (フリーズ防止)
+                // GenerateThumbnailAsync を呼び出し
                 string thumbPath = await Task.Run(async () =>
                 {
-                    // サービス側のメソッドを呼び出す (mediaInfoを渡す)
-                    return await service.GenerateThumbnailAsync(ClipData.FilePath, mediaInfo, middleTime);
+                    return await service.GenerateThumbnailAsync(ClipData.FilePath, targetTimeMs);
                 });
 
                 if (!string.IsNullOrEmpty(thumbPath))
@@ -312,8 +445,8 @@ namespace ImasClipManager.Views
             }
             catch (Exception ex)
             {
-                // エラー内容を表示 (FFmpegエラーは詳細なログが出るはず)
-                MessageBox.Show($"サムネイル生成処理中にエラーが発生しました。\n\n詳細エラー:\n{ex.Message}", "エラー");
+                // エラー内容を表示
+                MessageBox.Show($"{ex.Message}", "エラー", MessageBoxButton.OK, MessageBoxImage.Error);
             }
             finally
             {

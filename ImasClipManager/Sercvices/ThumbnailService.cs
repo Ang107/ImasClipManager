@@ -1,7 +1,7 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using Xabe.FFmpeg;
 using Xabe.FFmpeg.Downloader;
@@ -31,58 +31,64 @@ namespace ImasClipManager.Services
             _isInitialized = true;
         }
 
-        // IMediaInfo を引数に追加 (重複読み込みを避ける)
-        public async Task<string> GenerateThumbnailAsync(string videoPath, IMediaInfo mediaInfo, long timeMs)
+        public async Task<string> GenerateThumbnailAsync(string videoPath, long timeMs)
         {
             await InitializeAsync();
 
             try
             {
+                // 1. ストリーム情報を取得 (高速)
+                var mediaInfo = await FFmpeg.GetMediaInfo(videoPath);
+                var videoStream = mediaInfo.VideoStreams.FirstOrDefault();
+
+                if (videoStream == null) throw new Exception("動画ストリームが見つかりませんでした。");
+
                 string fileName = $"{Guid.NewGuid()}.jpg";
                 string outputPath = Path.Combine(_thumbnailFolder, fileName);
 
-                var durationMs = mediaInfo.Duration.TotalMilliseconds;
-                if (timeMs > durationMs) timeMs = 0;
+                // 時間をフォーマット
+                var seekTime = TimeSpan.FromMilliseconds(timeMs).ToString(@"hh\:mm\:ss\.fff", System.Globalization.CultureInfo.InvariantCulture);
 
-                // --- 高速シーク変換設定 ---
+                // 2. 高速シークコマンドの構築
+                Debug.WriteLine("[ThumbnailService] 高速シークでサムネイル生成を開始します...");
+
                 var conversion = FFmpeg.Conversions.New();
 
-                // 1. 高速シーク設定 (-ss を入力の前に置く)
-                double seekSeconds = TimeSpan.FromMilliseconds(timeMs).TotalSeconds;
-                conversion.AddParameter($"-ss {seekSeconds.ToString("F3", System.Globalization.CultureInfo.InvariantCulture)}", ParameterPosition.PreInput);
+                // -ss を入力より前に置く (高速シーク)
+                conversion.AddParameter($"-ss {seekTime}", ParameterPosition.PreInput);
 
-                // 2. 入力ストリーム設定 (mediaInfoから取得)
-                var videoStream = mediaInfo.VideoStreams.FirstOrDefault();
-                if (videoStream == null) throw new Exception("動画ストリームが見つかりません。");
+                // AddStreamを使うことでパスの引用符処理をライブラリに任せる
                 conversion.AddStream(videoStream);
 
-                // 3. 出力設定
+                // 出力設定
                 conversion.SetOutput(outputPath)
                           .SetOverwriteOutput(true)
-                          .AddParameter("-frames:v 1");
+                          .AddParameter("-frames:v 1")
+                          .AddParameter("-f image2");
 
-                // 4. タイムアウト付き実行
-                using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(15)))
-                {
-                    try
-                    {
-                        await conversion.Start(cts.Token);
-                    }
-                    catch (OperationCanceledException)
-                    {
-                        throw new Exception("処理がタイムアウトしました（15秒経過）。ファイルが大きすぎるか、処理が詰まっています。");
-                    }
-                }
+                // 3. 実行
+                await conversion.Start();
 
                 return outputPath;
             }
-            catch (Xabe.FFmpeg.Exceptions.ConversionException ce)
+            catch (Xabe.FFmpeg.Exceptions.ConversionException ex)
             {
-                throw new Exception($"FFmpeg変換エラー: {ce.Message}\n\n実行コマンド: {ce.InputParameters}", ce);
+                // ■ 失敗した場合: フォールバックせずに明確なエラーを返す
+                var errorMsg = "サムネイルの生成に失敗しました。\n\n" +
+                               "【原因の可能性】\n" +
+                               "この動画ファイルは「高速シーク」に対応していない可能性があります。\n" +
+                               "動画のエンコード設定で以下を確認してください：\n" +
+                               "・「Web用に最適化 (Web Optimized)」がONになっているか\n" +
+                               "・キーフレーム間隔 (Keyint) が適切に設定されているか\n\n" +
+                               "※HandBrake等で再エンコードすると解決する場合があります。";
+
+                // 呼び出し元のMessageBoxで表示させるためにExceptionを投げる
+                throw new Exception(errorMsg, ex);
             }
             catch (Exception ex)
             {
-                throw new Exception($"サムネイル生成エラー: {ex.Message}", ex);
+                Debug.WriteLine($"[ERROR] 予期せぬエラー: {ex.Message}");
+                throw new Exception($"予期せぬエラーが発生しました: {ex.Message}", ex);
             }
         }
     }

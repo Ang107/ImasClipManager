@@ -12,17 +12,17 @@
                 <x:Type TypeName="models:LiveType"/>
             </ObjectDataProvider.MethodParameters>
         </ObjectDataProvider>
-
     </Window.Resources>
 
-    <Grid Margin="15">
+    <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
         <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto">
-            <StackPanel>
+            <StackPanel Margin="15">
+
                 <Grid Margin="0,0,0,15" Background="#F5F5F5">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto"/>
@@ -48,6 +48,7 @@
                         </StackPanel>
                     </StackPanel>
                 </Grid>
+
                 <TextBlock Text="動画ファイルパス *:" FontWeight="Bold"/>
                 <Grid Margin="0,5,0,2">
                     <Grid.ColumnDefinitions>
@@ -67,13 +68,25 @@
                         <ColumnDefinition Width="10"/>
                         <ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
+
                     <StackPanel Grid.Column="0">
-                        <TextBlock Text="再生開始 (mm:ss または hh:mm:ss, 空白で最初から):" FontWeight="Bold" FontSize="11"/>
-                        <TextBox Text="{Binding ClipData.StartTimeStr}" Margin="0,5,0,0" IsEnabled="{Binding IsEditable}"/>
+                        <TextBlock Text="再生開始 (mm:ss / hh:mm:ss):" FontWeight="Bold" FontSize="11"/>
+                        <TextBox x:Name="StartTimeBox" 
+                                 Text="{Binding ClipData.StartTimeStr, UpdateSourceTrigger=LostFocus}" 
+                                 Margin="0,5,0,0" 
+                                 IsEnabled="{Binding IsEditable}" 
+                                 LostFocus="Time_LostFocus"/>
+                        <TextBlock x:Name="StartTimeErrorText" Foreground="Red" FontSize="11" TextWrapping="Wrap" Margin="0,2,0,0"/>
                     </StackPanel>
+
                     <StackPanel Grid.Column="2">
-                        <TextBlock Text="再生終了 (mm:ss または hh:mm:ss, 空白で最後まで):" FontWeight="Bold" FontSize="11"/>
-                        <TextBox Text="{Binding ClipData.EndTimeStr}" Margin="0,5,0,0" IsEnabled="{Binding IsEditable}"/>
+                        <TextBlock Text="再生終了 (mm:ss / hh:mm:ss):" FontWeight="Bold" FontSize="11"/>
+                        <TextBox x:Name="EndTimeBox" 
+                                 Text="{Binding ClipData.EndTimeStr, UpdateSourceTrigger=LostFocus}" 
+                                 Margin="0,5,0,0" 
+                                 IsEnabled="{Binding IsEditable}" 
+                                 LostFocus="Time_LostFocus"/>
+                        <TextBlock x:Name="EndTimeErrorText" Foreground="Red" FontSize="11" TextWrapping="Wrap" Margin="0,2,0,0"/>
                     </StackPanel>
                 </Grid>
 
@@ -96,9 +109,9 @@
                     <StackPanel Grid.Column="2">
                         <TextBlock Text="ライブ形式:" FontWeight="Bold"/>
                         <ComboBox ItemsSource="{Binding Source={StaticResource LiveTypeEnum}}" 
-                            SelectedItem="{Binding ClipData.LiveType}" 
-                            Margin="0,5,0,0" 
-                            IsEnabled="{Binding IsEditable}">
+                                  SelectedItem="{Binding ClipData.LiveType}" 
+                                  Margin="0,5,0,0" 
+                                  IsEnabled="{Binding IsEditable}">
                             <ComboBox.ItemTemplate>
                                 <DataTemplate>
                                     <TextBlock Text="{Binding Converter={StaticResource LiveTypeConv}}"/>
@@ -127,37 +140,43 @@
                     </ItemsControl>
                 </Border>
 
-                <TextBlock Text="出演者:" FontWeight="Bold" Margin="0,15,0,0"/>
-                <Grid Margin="0,5,0,15">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="Auto"/>
-                    </Grid.ColumnDefinitions>
-
-                    <TextBox x:Name="PerformersTextBox" 
-                             Text="{Binding PerformersDisplayText, Mode=OneWay}"
-                             IsReadOnly="True" 
-                             VerticalContentAlignment="Center" 
-                             Height="50" TextWrapping="Wrap" 
-                             VerticalScrollBarVisibility="Auto"/>
-
-                    <Button Grid.Column="1" Content="選択..." Width="60" Margin="5,0,0,0" 
+                <StackPanel Orientation="Horizontal" Margin="0,15,0,5">
+                    <TextBlock Text="出演者:" FontWeight="Bold" VerticalAlignment="Center"/>
+                    <Button Content="選択..." Width="60" Margin="10,0,0,0" 
                             Click="SelectPerformers_Click" 
                             IsEnabled="{Binding IsEditable}" 
-                            VerticalAlignment="Top" Height="25"/>
-                </Grid>
+                            VerticalAlignment="Center" Height="22"/>
+                </StackPanel>
+
+                <TextBox x:Name="PerformersTextBox" 
+                         Text="{Binding PerformersDisplayText, Mode=OneWay}"
+                         IsReadOnly="True" 
+                         VerticalContentAlignment="Top" 
+                         MinHeight="50" Height="Auto" MaxHeight="200"
+                         TextWrapping="Wrap" 
+                         AcceptsReturn="True"
+                         VerticalScrollBarVisibility="Auto"
+                         Margin="0,0,0,15" Background="#F0F0F0"/>
 
                 <TextBlock Text="歌詞:" FontWeight="Bold"/>
-                <TextBox Text="{Binding ClipData.Lyrics}" Height="60" AcceptsReturn="True" VerticalScrollBarVisibility="Auto" Margin="0,5,0,15" IsEnabled="{Binding IsEditable}"/>
+                <TextBox Text="{Binding ClipData.Lyrics}" 
+                         MinHeight="60" Height="Auto" MaxHeight="300"
+                         AcceptsReturn="True" TextWrapping="Wrap"
+                         VerticalScrollBarVisibility="Auto" 
+                         Margin="0,5,0,15" IsEnabled="{Binding IsEditable}"/>
 
                 <TextBlock Text="備考:" FontWeight="Bold"/>
-                <TextBox Text="{Binding ClipData.Remarks}" Height="60" AcceptsReturn="True" VerticalScrollBarVisibility="Auto" Margin="0,5,0,0" IsEnabled="{Binding IsEditable}"/>
+                <TextBox Text="{Binding ClipData.Remarks}" 
+                         MinHeight="60" Height="Auto" MaxHeight="300"
+                         AcceptsReturn="True" TextWrapping="Wrap"
+                         VerticalScrollBarVisibility="Auto" 
+                         Margin="0,5,0,0" IsEnabled="{Binding IsEditable}"/>
             </StackPanel>
         </ScrollViewer>
 
-        <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,10,0,0">
+        <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,10,15,15">
             <Button Content="キャンセル" Width="100" Margin="0,0,10,0" IsCancel="True"/>
-            <Button Content="{Binding ActionButtonText}" Width="100" Click="Action_Click" IsDefault="True"/>
+            <Button Content="{Binding ActionButtonText}" Width="100" Click="Action_Click"/>
         </StackPanel>
     </Grid>
 </Window>
