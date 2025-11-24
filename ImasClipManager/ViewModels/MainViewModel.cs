@@ -181,6 +181,25 @@ namespace ImasClipManager.ViewModels
         }
 
         [RelayCommand]
+        public async Task DeleteClip(Clip clip)
+        {
+            if (clip == null) return;
+            if (MessageBox.Show("クリップを削除しますか？", "確認", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
+            {
+                using (var db = new AppDbContext())
+                {
+                    var target = await db.Clips.FindAsync(clip.Id);
+                    if (target != null)
+                    {
+                        db.Clips.Remove(target);
+                        await db.SaveChangesAsync();
+                    }
+                }
+                await LoadClipsAsync();
+            }
+        }
+
+        [RelayCommand]
         public void ShowClipDetail(Clip clip)
         {
             if (clip == null) return;
@@ -265,6 +284,37 @@ namespace ImasClipManager.ViewModels
                 await LoadSpacesAsync();
             }
         }
+
+        [RelayCommand]
+        public async Task DeleteSpace(Space space)
+        {
+            if (space == null) return;
+
+            // 最後の1つは削除させないなどの制御が必要ならここに入れる
+            if (Spaces.Count <= 1)
+            {
+                MessageBox.Show("最後のスペースは削除できません。", "エラー", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            var res = MessageBox.Show($"スペース「{space.Name}」を削除しますか？\n※含まれるクリップもすべて削除されます。",
+                                      "削除確認", MessageBoxButton.YesNo, MessageBoxImage.Warning);
+            if (res == MessageBoxResult.Yes)
+            {
+                using (var db = new AppDbContext())
+                {
+                    var target = await db.Spaces.FindAsync(space.Id);
+                    if (target != null)
+                    {
+                        db.Spaces.Remove(target); // Cascade Delete設定によりClipsも消える
+                        await db.SaveChangesAsync();
+                    }
+                }
+                await LoadSpacesAsync();
+            }
+        }
+
+
 
 
         [ObservableProperty]
