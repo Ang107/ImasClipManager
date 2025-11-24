@@ -184,10 +184,66 @@
                         <DataGridTextColumn Header="公演名" Binding="{Binding ConcertName}" Width="1.5*" ElementStyle="{StaticResource CenterTextStyle}"/>
                         <DataGridTextColumn Header="公演日" Binding="{Binding ConcertDate, StringFormat=yyyy/MM/dd}" Width="0.8*" ElementStyle="{StaticResource CenterTextStyle}"/>
                         <DataGridTextColumn Header="形式" Binding="{Binding LiveType, Converter={StaticResource LiveTypeConv}}" Width="0.6*" ElementStyle="{StaticResource CenterTextStyle}"/>
-                        <DataGridTextColumn Header="ブランド" Binding="{Binding Brands, Converter={StaticResource BrandTypeConv}}" Width="1.2*" ElementStyle="{StaticResource CenterTextStyle}"/>
-                        <DataGridTextColumn Header="出演者" Binding="{Binding Converter={StaticResource ClipPerformersConv}}" Width="2*" ElementStyle="{StaticResource CenterTextStyle}"/>
-                        <DataGridTextColumn Header="歌詞" Binding="{Binding Lyrics}" Width="2*" ElementStyle="{StaticResource LeftTextStyle}"/>
-                        <DataGridTextColumn Header="備考" Binding="{Binding Remarks}" Width="1.5*" ElementStyle="{StaticResource LeftTextStyle}"/>
+                        <DataGridTemplateColumn Header="ブランド"
+                            Width="1.2*"
+                            SortMemberPath="Brands">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <ScrollViewer VerticalScrollBarVisibility="Auto"
+                                      HorizontalScrollBarVisibility="Disabled"
+                                      CanContentScroll="True">
+                                                <TextBlock Text="{Binding Brands, Converter={StaticResource BrandTypeConv}}"
+                                       Style="{StaticResource CenterTextStyle}"
+                                       TextWrapping="NoWrap"/>
+                                    </ScrollViewer>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                        <DataGridTemplateColumn Header="出演者"
+                            Width="1.5*"
+                            SortMemberPath="PerformersSortKey">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <ScrollViewer VerticalScrollBarVisibility="Auto"
+                                      HorizontalScrollBarVisibility="Disabled"
+                                      CanContentScroll="True">
+                                                <TextBlock Text="{Binding Converter={StaticResource ClipPerformersConv}}"
+                                       Style="{StaticResource CenterTextStyle}"
+                                       TextWrapping="NoWrap"/>
+                                    </ScrollViewer>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                        <DataGridTemplateColumn Header="歌詞"
+                            Width="2*"
+                            SortMemberPath="Lyrics">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <ScrollViewer VerticalScrollBarVisibility="Auto"
+                                      HorizontalScrollBarVisibility="Disabled"
+                                      CanContentScroll="True">
+                                                <TextBlock Text="{Binding Lyrics}"
+                                       Style="{StaticResource LeftTextStyle}"
+                                       TextWrapping="NoWrap"/>
+                                    </ScrollViewer>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                        <DataGridTemplateColumn Header="備考"
+                            Width="1.5*"
+                            SortMemberPath="Remarks">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <ScrollViewer VerticalScrollBarVisibility="Auto"
+                                      HorizontalScrollBarVisibility="Disabled"
+                                      CanContentScroll="True">
+                                                <TextBlock Text="{Binding Remarks}"
+                                       Style="{StaticResource LeftTextStyle}"
+                                       TextWrapping="NoWrap"/>
+                                            </ScrollViewer>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
                         <DataGridTextColumn Header="再生数" Binding="{Binding PlayCount}" Width="0.5*" ElementStyle="{StaticResource CenterTextStyle}"/>
                         <DataGridTemplateColumn Header="登録日" Width="0.9*" SortMemberPath="CreatedAt">
                             <DataGridTemplateColumn.CellTemplate>

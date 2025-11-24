@@ -75,6 +75,19 @@ namespace ImasClipManager.Models
             }
         }
 
+        [NotMapped]
+        public string PerformersSortKey
+        {
+            get
+            {
+                if (Performers == null) return string.Empty;
+                return string.Join(", ",
+                    Performers
+                        .OrderBy(p => p.Brand).ThenBy(p => p.Yomi).Select(p => p.Name));
+
+            }
+        }
+
         public string ConcertName { get; set; } = string.Empty;
         public BrandType Brands { get; set; } = BrandType.None;
         public LiveType LiveType { get; set; } = LiveType.Seiyuu;
