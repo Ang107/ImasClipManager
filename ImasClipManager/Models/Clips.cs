@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using ImasClipManager.Helpers;
 
 namespace ImasClipManager.Models
 {
@@ -43,33 +44,18 @@ namespace ImasClipManager.Models
         public long StartTimeMs { get; set; } = 0;
         public long? EndTimeMs { get; set; }
 
-        // 時間文字列プロパティもそのままでOK（変更通知が必要ならここもSetPropertyにするが、今回は割愛）
         [NotMapped]
         public string StartTimeStr
         {
             get => TimeSpan.FromMilliseconds(StartTimeMs).ToString(@"hh\:mm\:ss");
             set
             {
-                if (string.IsNullOrWhiteSpace(value))
+                // 共通ロジックを使用
+                if (TimeHelper.TryParseTime(value, out long ms))
                 {
-                    StartTimeMs = 0;
-                    return;
+                    StartTimeMs = ms;
                 }
-
-                var parts = value.Split(':');
-                if (parts.Length == 2)
-                {
-                    if (double.TryParse(parts[0], out double mm) && double.TryParse(parts[1], out double ss))
-                    {
-                        StartTimeMs = (long)(TimeSpan.FromMinutes(mm) + TimeSpan.FromSeconds(ss)).TotalMilliseconds;
-                        return;
-                    }
-                }
-
-                if (TimeSpan.TryParse(value, out var ts))
-                {
-                    StartTimeMs = (long)ts.TotalMilliseconds;
-                }
+                // ※パース失敗時は値を更新しない、あるいは0にするなど仕様に合わせて調整
             }
         }
 
@@ -82,22 +68,10 @@ namespace ImasClipManager.Models
                 if (string.IsNullOrWhiteSpace(value))
                 {
                     EndTimeMs = null;
-                    return;
                 }
-
-                var parts = value.Split(':');
-                if (parts.Length == 2)
+                else if (TimeHelper.TryParseTime(value, out long ms))
                 {
-                    if (double.TryParse(parts[0], out double mm) && double.TryParse(parts[1], out double ss))
-                    {
-                        EndTimeMs = (long)(TimeSpan.FromMinutes(mm) + TimeSpan.FromSeconds(ss)).TotalMilliseconds;
-                        return;
-                    }
-                }
-
-                if (TimeSpan.TryParse(value, out var ts))
-                {
-                    EndTimeMs = (long)ts.TotalMilliseconds;
+                    EndTimeMs = ms;
                 }
             }
         }

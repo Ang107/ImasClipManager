@@ -1,5 +1,7 @@
 ﻿using ImasClipManager.Models;
 using Microsoft.EntityFrameworkCore;
+using System;
+using System.IO;
 
 namespace ImasClipManager.Data
 {
@@ -13,8 +15,19 @@ namespace ImasClipManager.Data
         // データベースの接続設定
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
-            // アプリの実行フォルダに "ImasClipManager.db" というファイルを作ります
-            optionsBuilder.UseSqlite("Data Source=ImasClipManager.db");
+            // ローカルアプリケーションデータフォルダ (例: C:\Users\User\AppData\Local\ImasClipManager) を取得
+            var folder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "ImasClipManager");
+
+            // フォルダがなければ作成
+            if (!Directory.Exists(folder))
+            {
+                Directory.CreateDirectory(folder);
+            }
+
+            var dbPath = Path.Combine(folder, "ImasClipManager.db");
+
+            // フルパスを指定してSQLiteを使用
+            optionsBuilder.UseSqlite($"Data Source={dbPath}");
         }
     }
 }

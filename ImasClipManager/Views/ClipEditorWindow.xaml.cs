@@ -156,32 +156,6 @@ namespace ImasClipManager.Views
             }
         }
 
-        private bool TryParseTime(string input, out long resultMs)
-        {
-            resultMs = 0;
-            if (string.IsNullOrWhiteSpace(input)) return true; // 空白はOK(0またはnull扱い)
-
-            // mm:ss 形式の独自対応
-            var parts = input.Split(':');
-            if (parts.Length == 2)
-            {
-                if (double.TryParse(parts[0], out double mm) && double.TryParse(parts[1], out double ss))
-                {
-                    resultMs = (long)(TimeSpan.FromMinutes(mm) + TimeSpan.FromSeconds(ss)).TotalMilliseconds;
-                    return true;
-                }
-            }
-
-            // 標準的な TimeSpan パース (hh:mm:ss など)
-            if (TimeSpan.TryParse(input, out var ts))
-            {
-                resultMs = (long)ts.TotalMilliseconds;
-                return true;
-            }
-
-            return false;
-        }
-
         private bool ValidateTimes()
         {
             bool isValid = true;
@@ -189,9 +163,9 @@ namespace ImasClipManager.Views
             long? endMs = null;
 
             // 1. 書式チェック (開始)
-            if (!TryParseTime(StartTimeBox.Text, out startMs))
+            if (!TimeHelper.TryParseTime(StartTimeBox.Text, out startMs))
             {
-                StartTimeErrorText.Text = "※ 書式が不正です (例 10:30)";
+                StartTimeErrorText.Text = "※ 書式が不正です (例 10:30, 1:23:45)";
                 isValid = false;
             }
             else
@@ -207,7 +181,7 @@ namespace ImasClipManager.Views
             }
             else
             {
-                if (!TryParseTime(EndTimeBox.Text, out long tempEnd))
+                if (!TimeHelper.TryParseTime(EndTimeBox.Text, out long tempEnd))
                 {
                     EndTimeErrorText.Text = "※ 書式が不正です";
                     isValid = false;

@@ -12,6 +12,7 @@ using Microsoft.EntityFrameworkCore; // Include用
 using Microsoft.Win32; // OpenFileDialog, SaveFileDialog用
 using ImasClipManager.Services; // 追加
 using System.Text; // 追加
+using System.Threading.Tasks;
 
 namespace ImasClipManager.ViewModels
 {
@@ -33,7 +34,7 @@ namespace ImasClipManager.ViewModels
                 if (SetProperty(ref _selectedSpace, value))
                 {
                     // スペースが切り替わったらクリップを再ロード
-                    LoadClips();
+                    _ = LoadClipsAsync();
                 }
             }
         }
@@ -54,30 +55,32 @@ namespace ImasClipManager.ViewModels
 
         public MainViewModel()
         {
-            // 初期化時にスペース一覧をロード
-            LoadSpaces();
-
+            _ = InitializeAsync();
             // クリップのフィルタ設定
             _clipsView = CollectionViewSource.GetDefaultView(Clips);
             _clipsView.Filter = FilterClips;
         }
 
-        // --- データ読み込みロジック ---
+        private async Task InitializeAsync()
+        {
+            await LoadSpacesAsync();
+        }
 
-        public void LoadSpaces()
+        // --- データ読み込みロジック ---
+        public async Task LoadSpacesAsync()
         {
             using (var db = new AppDbContext())
             {
                 //db.Database.EnsureDeleted();
-                db.Database.EnsureCreated();
-                var spaceList = db.Spaces.OrderBy(s => s.Id).ToList();
+                await db.Database.EnsureCreatedAsync();
+                var spaceList = await db.Spaces.OrderBy(s => s.Id).ToListAsync();
 
                 // スペースが1つもなければデフォルトを作成
                 if (!spaceList.Any())
                 {
                     var defaultSpace = new Space { Name = "デフォルト" };
                     db.Spaces.Add(defaultSpace);
-                    db.SaveChanges();
+                    await db.SaveChangesAsync();
                     spaceList.Add(defaultSpace);
                 }
 
@@ -97,7 +100,7 @@ namespace ImasClipManager.ViewModels
             }
         }
 
-        public void LoadClips()
+        public async Task LoadClipsAsync()
         {
             Clips.Clear();
             if (SelectedSpace == null) return;
@@ -105,11 +108,11 @@ namespace ImasClipManager.ViewModels
             using (var db = new AppDbContext())
             {
                 // 選択中のスペースIDでフィルタリング + PerformersをIncludeして即時ロード
-                var list = db.Clips
+                var list = await db.Clips
                              .Include(c => c.Performers)
                              .Where(c => c.SpaceId == SelectedSpace.Id)
                              .OrderByDescending(c => c.CreatedAt)
-                             .ToList();
+                             .ToListAsync();
 
                 foreach (var item in list)
                 {
@@ -142,7 +145,7 @@ namespace ImasClipManager.ViewModels
         // --- クリップ操作コマンド ---
 
         [RelayCommand]
-        public void AddClip()
+        public async Task AddClip() // void -> async Task
         {
             if (SelectedSpace == null)
             {
@@ -153,41 +156,43 @@ namespace ImasClipManager.ViewModels
             var window = new ClipEditorWindow(null, EditorMode.Add);
             if (window.ShowDialog() == true)
             {
-                // 選択中のスペースIDを強制セット
                 window.ClipData.SpaceId = SelectedSpace.Id;
-                SaveClipToDb(window.ClipData);
-                LoadClips();
+                // 変更点: await SaveClipToDbAsync(...)
+                await SaveClipToDbAsync(window.ClipData);
+                await LoadClipsAsync();
             }
         }
 
         [RelayCommand]
-        public void EditClip(Clip clip)
+        public async Task EditClip(Clip clip)
         {
             if (clip == null) return;
             var window = new ClipEditorWindow(clip, EditorMode.Edit);
             if (window.ShowDialog() == true)
             {
-                UpdateClipInDb(window.ClipData);
-                LoadClips();
+                // 変更点: await UpdateClipInDbAsync(...)
+                await UpdateClipInDbAsync(window.ClipData);
+                await LoadClipsAsync();
             }
         }
 
         [RelayCommand]
-        public void DeleteClip(Clip clip)
+        public async Task DeleteClip(Clip clip)
         {
             if (clip == null) return;
             if (MessageBox.Show("クリップを削除しますか？", "確認", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
             {
                 using (var db = new AppDbContext())
                 {
-                    var target = db.Clips.Find(clip.Id);
+                    // Find -> await FindAsync
+                    var target = await db.Clips.FindAsync(clip.Id); // ★ここを非同期に
                     if (target != null)
                     {
                         db.Clips.Remove(target);
-                        db.SaveChanges();
+                        await db.SaveChangesAsync();
                     }
                 }
-                LoadClips();
+                await LoadClipsAsync();
             }
         }
 
@@ -199,17 +204,17 @@ namespace ImasClipManager.ViewModels
         }
 
         [RelayCommand]
-        public void PlayClip(Clip clip)
+        public async Task PlayClip(Clip clip)
         {
             if (clip == null) return;
 
             using (var db = new AppDbContext())
             {
-                var target = db.Clips.Find(clip.Id);
+                var target = await db.Clips.FindAsync(clip.Id);
                 if (target != null)
                 {
                     target.PlayCount++;
-                    db.SaveChanges(); // Performers は読み込んでいないので影響しない
+                    await db.SaveChangesAsync(); // Performers は読み込んでいないので影響しない
 
                     // 画面表示用のオブジェクトも同期させておく
                     clip.PlayCount = target.PlayCount;
@@ -225,7 +230,7 @@ namespace ImasClipManager.ViewModels
         // --- スペース操作コマンド ---
 
         [RelayCommand]
-        public void AddSpace()
+        public async Task AddSpace()
         {
             var input = new InputWindow("新しいスペース名:");
             if (input.ShowDialog() == true && !string.IsNullOrWhiteSpace(input.InputText))
@@ -234,16 +239,16 @@ namespace ImasClipManager.ViewModels
                 {
                     var newSpace = new Space { Name = input.InputText.Trim() };
                     db.Spaces.Add(newSpace);
-                    db.SaveChanges();
+                    await db.SaveChangesAsync();
                 }
-                LoadSpaces(); // リロードして反映
+                await LoadSpacesAsync(); // リロードして反映
                 // 追加したスペースを選択状態にする
                 SelectedSpace = Spaces.LastOrDefault();
             }
         }
 
         [RelayCommand]
-        public void EditSpace(Space space)
+        public async Task EditSpace(Space space)
         {
             if (space == null) return;
 
@@ -252,19 +257,19 @@ namespace ImasClipManager.ViewModels
             {
                 using (var db = new AppDbContext())
                 {
-                    var target = db.Spaces.Find(space.Id);
+                    var target = await db.Spaces.FindAsync(space.Id);
                     if (target != null)
                     {
                         target.Name = input.InputText.Trim();
-                        db.SaveChanges();
+                        await db.SaveChangesAsync();
                     }
                 }
-                LoadSpaces();
+                await LoadSpacesAsync();
             }
         }
 
         [RelayCommand]
-        public void DeleteSpace(Space space)
+        public async Task DeleteSpace(Space space)
         {
             if (space == null) return;
 
@@ -281,93 +286,74 @@ namespace ImasClipManager.ViewModels
             {
                 using (var db = new AppDbContext())
                 {
-                    var target = db.Spaces.Find(space.Id);
+                    var target = await db.Spaces.FindAsync(space.Id);
                     if (target != null)
                     {
                         db.Spaces.Remove(target); // Cascade Delete設定によりClipsも消える
-                        db.SaveChanges();
+                        await db.SaveChangesAsync();
                     }
                 }
-                LoadSpaces();
+                await LoadSpacesAsync();
             }
         }
 
         // --- DBヘルパー ---
 
-        private void SaveClipToDb(Clip clip)
+        private async Task SaveClipToDbAsync(Clip clip)
         {
             using (var db = new AppDbContext())
             {
-                // ★重要: 出演者データは既にDBに存在するため、
-                // "新規追加(Added)"扱いにならないように、明示的にアタッチ(Attach)します。
-                // これを行わないと、既存の出演者をもう一度INSERTしようとしてエラーになります。
                 if (clip.Performers != null)
                 {
-                    foreach (var p in clip.Performers)
-                    {
-                        db.Attach(p); // これで「変更なし(Unchanged)」の状態として認識されます
-                    }
+                    foreach (var p in clip.Performers) db.Attach(p);
                 }
 
-                // Spaceが無ければ作る（簡易対策）
-                if (!db.Spaces.Any())
+                // Any() -> await AnyAsync(), SaveChanges() -> await SaveChangesAsync()
+                if (!await db.Spaces.AnyAsync())
                 {
                     db.Spaces.Add(new Space { Name = "Default" });
-                    db.SaveChanges();
+                    await db.SaveChangesAsync();
                 }
 
-                // スペースIDの紐づけ（念のため）
                 if (clip.SpaceId == 0 && SelectedSpace != null)
                 {
                     clip.SpaceId = SelectedSpace.Id;
                 }
 
                 db.Clips.Add(clip);
-                db.SaveChanges();
+                await db.SaveChangesAsync(); // ★ここを非同期に
             }
         }
 
-        private void UpdateClipInDb(Clip clip)
+        private async Task UpdateClipInDbAsync(Clip clip)
         {
             using (var db = new AppDbContext())
             {
-                // 編集の場合、リレーション（多対多）を安全に更新するために
-                // 一度DBから現在の状態を読み込んでから、差分を適用する方法が最も確実です。
-
-                var existingClip = db.Clips
-                                     .Include(c => c.Performers) // 現在の出演者紐づけも含めてロード
-                                     .FirstOrDefault(c => c.Id == clip.Id);
+                // FirstOrDefault -> await FirstOrDefaultAsync
+                var existingClip = await db.Clips
+                                     .Include(c => c.Performers)
+                                     .FirstOrDefaultAsync(c => c.Id == clip.Id); // ★ここを非同期に
 
                 if (existingClip != null)
                 {
-                    // 1. クリップ本体の値（タイトルや日付など）をコピーして更新
                     db.Entry(existingClip).CurrentValues.SetValues(clip);
-
-                    // 2. 出演者リストの更新
-                    // 一旦紐づけをクリア
                     existingClip.Performers.Clear();
 
-                    // 画面で選択された出演者を再登録
                     foreach (var p in clip.Performers)
                     {
-                        // ここでも「既存のデータだよ」と教えるためにAttachを使いたいのですが、
-                        // 同じコンテキスト内ですでに追跡されているか確認してから行います。
                         var trackedPerformer = db.Performers.Local.FirstOrDefault(x => x.Id == p.Id);
-
                         if (trackedPerformer != null)
                         {
-                            // 既に追跡中ならそれを使う
                             existingClip.Performers.Add(trackedPerformer);
                         }
                         else
                         {
-                            // 追跡されていないならAttachして追加
                             db.Attach(p);
                             existingClip.Performers.Add(p);
                         }
                     }
 
-                    db.SaveChanges();
+                    await db.SaveChangesAsync(); // ★ここを非同期に
                 }
             }
         }
