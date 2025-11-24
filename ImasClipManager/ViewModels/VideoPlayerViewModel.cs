@@ -58,7 +58,7 @@ namespace ImasClipManager.ViewModels
             _dispatcher = Application.Current.Dispatcher;
 
             // 区間設定
-            _clipStartMs = clip.StartTimeMs;
+            _clipStartMs = clip.StartTimeMs ?? 0;
             // EndTimeMsがnullまたは0の場合は、一旦最大値にしておき、動画ロード後に補正する
             _clipEndMs = (clip.EndTimeMs.HasValue && clip.EndTimeMs > 0) ? clip.EndTimeMs.Value : long.MaxValue;
 
@@ -81,15 +81,6 @@ namespace ImasClipManager.ViewModels
             media.AddOption(":avcodec-hw=any");
 
             MediaPlayer.Media = media;
-            //MediaPlayer.Play();
-            //MediaPlayer.Volume = Volume;
-
-            //// 開始位置へシーク
-            //if (_clipStartMs > 0)
-            //{
-            //    // 少し待ってからシーク（即時だと効かない場合があるため）
-            //    Task.Delay(100).ContinueWith(_ => MediaPlayer.Time = _clipStartMs);
-            //}
         }
 
         public void Loaded()
@@ -97,12 +88,8 @@ namespace ImasClipManager.ViewModels
             MediaPlayer.Volume = Volume;
             MediaPlayer.Play();
 
-            // 開始位置へシーク
-            if (_clipStartMs > 0)
-            {
-                // 少し待ってからシーク
-                Task.Delay(100).ContinueWith(_ => MediaPlayer.Time = _clipStartMs);
-            }
+            // 少し待ってからシーク
+            Task.Delay(100).ContinueWith(_ => MediaPlayer.Time = _clipStartMs);
         }
 
         // 時間情報の更新（長さなどが変わったときに呼ぶ）

@@ -37,7 +37,7 @@ namespace ImasClipManager.Helpers
             if (brand.HasFlag(BrandType.Goudou)) names.Add("合同ライブ");
             if (brand.HasFlag(BrandType.Other)) names.Add("その他");
 
-            return string.Join(", ", names);
+            return string.Join(Environment.NewLine, names);
         }
     }
 }

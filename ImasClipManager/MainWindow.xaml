@@ -185,7 +185,7 @@
                         <DataGridTextColumn Header="公演日" Binding="{Binding ConcertDate, StringFormat=yyyy/MM/dd}" Width="0.8*" ElementStyle="{StaticResource CenterTextStyle}"/>
                         <DataGridTextColumn Header="形式" Binding="{Binding LiveType, Converter={StaticResource LiveTypeConv}}" Width="0.6*" ElementStyle="{StaticResource CenterTextStyle}"/>
                         <DataGridTextColumn Header="ブランド" Binding="{Binding Brands, Converter={StaticResource BrandTypeConv}}" Width="1.2*" ElementStyle="{StaticResource CenterTextStyle}"/>
-                        <DataGridTextColumn Header="出演者" Binding="{Binding Converter={StaticResource ClipPerformersConv}}" Width="2*" ElementStyle="{StaticResource LeftTextStyle}"/>
+                        <DataGridTextColumn Header="出演者" Binding="{Binding Converter={StaticResource ClipPerformersConv}}" Width="2*" ElementStyle="{StaticResource CenterTextStyle}"/>
                         <DataGridTextColumn Header="歌詞" Binding="{Binding Lyrics}" Width="2*" ElementStyle="{StaticResource LeftTextStyle}"/>
                         <DataGridTextColumn Header="備考" Binding="{Binding Remarks}" Width="1.5*" ElementStyle="{StaticResource LeftTextStyle}"/>
                         <DataGridTextColumn Header="再生数" Binding="{Binding PlayCount}" Width="0.5*" ElementStyle="{StaticResource CenterTextStyle}"/>
@@ -193,8 +193,8 @@
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
                                     <StackPanel VerticalAlignment="Center">
-                                        <TextBlock Text="{Binding CreatedAt, StringFormat=yyyy/MM/dd}" HorizontalAlignment="Center"/>
-                                        <TextBlock Text="{Binding CreatedAt, StringFormat=HH:mm:ss}" HorizontalAlignment="Center" Foreground="Gray" FontSize="11"/>
+                                        <TextBlock Text="{Binding CreatedAt, StringFormat=yyyy/MM/dd}" HorizontalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                                        <TextBlock Text="{Binding CreatedAt, StringFormat=HH:mm:ss}" HorizontalAlignment="Center" TextTrimming="CharacterEllipsis"/>
                                     </StackPanel>
                                 </DataTemplate>
                             </DataGridTemplateColumn.CellTemplate>
@@ -204,8 +204,8 @@
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
                                     <StackPanel VerticalAlignment="Center">
-                                        <TextBlock Text="{Binding UpdatedAt, StringFormat=yyyy/MM/dd}" HorizontalAlignment="Center"/>
-                                        <TextBlock Text="{Binding UpdatedAt, StringFormat=HH:mm:ss}" HorizontalAlignment="Center" Foreground="Gray" FontSize="11"/>
+                                        <TextBlock Text="{Binding UpdatedAt, StringFormat=yyyy/MM/dd}" HorizontalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                                        <TextBlock Text="{Binding UpdatedAt, StringFormat=HH:mm:ss}" HorizontalAlignment="Center" TextTrimming="CharacterEllipsis"/>
                                     </StackPanel>
                                 </DataTemplate>
                             </DataGridTemplateColumn.CellTemplate>

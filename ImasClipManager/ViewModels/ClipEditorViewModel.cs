@@ -290,7 +290,7 @@ namespace ImasClipManager.ViewModels
                 var service = new ThumbnailService();
                 // await service.InitializeAsync(); // ThumbnailService内で呼ばれるので不要かもだが念のため
 
-                long targetTimeMs = ClipData.StartTimeMs;
+                long targetTimeMs = 0;
 
                 if (ClipData.IsAutoThumbnail)
                 {
@@ -303,7 +303,7 @@ namespace ImasClipManager.ViewModels
                         totalDurationMs = info.Duration.TotalMilliseconds;
                     }
 
-                    long start = ClipData.StartTimeMs;
+                    long start = ClipData.StartTimeMs ?? 0;
                     long end = ClipData.EndTimeMs ?? (long)totalDurationMs;
 
                     if (start > totalDurationMs) start = 0;

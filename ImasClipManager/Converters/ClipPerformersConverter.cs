@@ -14,7 +14,7 @@ namespace ImasClipManager.Converters
             {
                 if (!clip.Performers.Any()) return "";
                 // 単純に Name プロパティを結合
-                return string.Join(", ", clip.Performers.Select(p => p.Name));
+                return string.Join(Environment.NewLine, clip.Performers.Select(p => p.Name));
             }
             return "";
         }
