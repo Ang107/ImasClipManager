@@ -2,9 +2,150 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vlc="clr-namespace:LibVLCSharp.WPF;assembly=LibVLCSharp.WPF"
-        Title="{Binding Title}" Height="450" Width="800"
-        Background="Black">
+        xmlns:converters="clr-namespace:ImasClipManager.Converters"
+        xmlns:sys="clr-namespace:System;assembly=mscorlib"
+        Title="{Binding Title}" Height="600" Width="1000"
+        Background="Black"
+        Topmost="{Binding IsMiniWindowMode}">
+
+    <Window.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+
+        <converters:ClipPerformersConverter x:Key="ClipPerformersConv"/>
+        <converters:BrandTypeToStringConverter x:Key="BrandTypeConv"/>
+        <converters:LiveTypeToStringConverter x:Key="LiveTypeConv"/>
+    </Window.Resources>
+
     <Grid>
-        <vlc:VideoView MediaPlayer="{Binding MediaPlayer}"/>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="Auto"/>
+        </Grid.ColumnDefinitions>
+
+        <Grid Grid.Column="0" MouseMove="Grid_MouseMove">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <vlc:VideoView Grid.Row="0" MediaPlayer="{Binding MediaPlayer}"/>
+
+            <Border Grid.Row="1" Background="#CC202020" Padding="10">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <Grid Grid.Row="0" Margin="0,0,0,5">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="{Binding CurrentTimeStr}" Foreground="White" Margin="0,0,10,0" VerticalAlignment="Center"/>
+
+                        <Slider Grid.Column="1" 
+                                Minimum="0" Maximum="{Binding TotalDurationMs}" 
+                                Value="{Binding CurrentPositionMs}"
+                                PreviewMouseDown="Slider_PreviewMouseDown"
+                                PreviewMouseUp="Slider_PreviewMouseUp"
+                                IsMoveToPointEnabled="True"
+                                VerticalAlignment="Center"/>
+
+                        <TextBlock Text="{Binding DurationStr}" Foreground="White" Margin="10,0,0,0" VerticalAlignment="Center"/>
+                    </Grid>
+
+                    <Grid Grid.Row="1">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Orientation="Horizontal" Grid.Column="0">
+                            <Button Command="{Binding TogglePlayPauseCommand}" Width="40" Margin="0,0,10,0" Background="Transparent" Foreground="White" BorderBrush="White">
+                                <Button.Style>
+                                    <Style TargetType="Button">
+                                        <Setter Property="Content" Value="▶"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsPlaying}" Value="True">
+                                                <Setter Property="Content" Value="||"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Button.Style>
+                            </Button>
+
+                            <Button Content="-10s" Command="{Binding SeekBackwardCommand}" Margin="0,0,5,0" Width="40" Background="Transparent" Foreground="White" BorderBrush="Gray"/>
+                            <Button Content="+10s" Command="{Binding SeekForwardCommand}" Margin="0,0,10,0" Width="40" Background="Transparent" Foreground="White" BorderBrush="Gray"/>
+
+                            <TextBlock Text="🔊" Foreground="White" VerticalAlignment="Center" Margin="0,0,5,0"/>
+                            <Slider Width="80" Minimum="0" Maximum="100" Value="{Binding Volume}" VerticalAlignment="Center"/>
+                        </StackPanel>
+
+                        <StackPanel Orientation="Horizontal" Grid.Column="2">
+                            <ComboBox Width="60" Text="{Binding PlaybackRate}" Margin="0,0,10,0" VerticalContentAlignment="Center" IsEditable="True">
+                                <sys:Single>0.5</sys:Single>
+                                <sys:Single>1.0</sys:Single>
+                                <sys:Single>1.25</sys:Single>
+                                <sys:Single>1.5</sys:Single>
+                                <sys:Single>2.0</sys:Single>
+                            </ComboBox>
+
+                            <ToggleButton IsChecked="{Binding IsRepeat}" Content="🔁" Width="30" Margin="0,0,10,0" Background="Transparent" Foreground="White" BorderBrush="Gray" ToolTip="区間リピート"/>
+
+                            <ToggleButton IsChecked="{Binding IsMiniWindowMode}" 
+                                          Content="📌" ToolTip="最前面固定(ミニウィンドウ)"
+                                          Width="30" Margin="0,0,10,0" Background="Transparent" Foreground="White" BorderBrush="Gray"/>
+
+                            <ToggleButton IsChecked="{Binding IsPropertyPanelVisible}" 
+                                          Content="ℹ" ToolTip="情報の表示/非表示"
+                                          Width="30" Margin="0,0,10,0" Background="Transparent" Foreground="White" BorderBrush="Gray"/>
+
+                            <Button Command="{Binding ToggleFullScreenCommand}" Content="⛶" Width="30" Background="Transparent" Foreground="White" BorderBrush="Gray"/>
+                        </StackPanel>
+                    </Grid>
+                </Grid>
+            </Border>
+        </Grid>
+
+        <Border Grid.Column="1" Width="300" Background="#F0F0F0" 
+                Visibility="{Binding IsPropertyPanelVisible, Converter={StaticResource BoolToVis}}">
+            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                <StackPanel Margin="15">
+                    <TextBlock Text="クリップ情報" FontWeight="Bold" FontSize="16" Margin="0,0,0,15"/>
+
+                    <TextBlock Text="曲名" FontWeight="Bold" Foreground="Gray"/>
+                    <TextBlock Text="{Binding ClipData.SongTitle}" FontSize="14" TextWrapping="Wrap" Margin="0,0,0,10"/>
+
+                    <TextBlock Text="公演名" FontWeight="Bold" Foreground="Gray"/>
+                    <TextBlock Text="{Binding ClipData.ConcertName}" TextWrapping="Wrap" Margin="0,0,0,10"/>
+
+                    <TextBlock Text="公演日" FontWeight="Bold" Foreground="Gray"/>
+                    <TextBlock Text="{Binding ClipData.ConcertDate, StringFormat=yyyy/MM/dd}" Margin="0,0,0,10"/>
+
+                    <TextBlock Text="出演者" FontWeight="Bold" Foreground="Gray"/>
+                    <TextBlock Text="{Binding ClipData, Converter={StaticResource ClipPerformersConv}}" TextWrapping="Wrap" Margin="0,0,0,10"/>
+
+                    <TextBlock Text="形式/ブランド" FontWeight="Bold" Foreground="Gray"/>
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                        <TextBlock Text="{Binding ClipData.LiveType, Converter={StaticResource LiveTypeConv}}"/>
+                        <TextBlock Text=" / "/>
+                        <TextBlock Text="{Binding ClipData.Brands, Converter={StaticResource BrandTypeConv}}"/>
+                    </StackPanel>
+
+                    <TextBlock Text="歌詞" FontWeight="Bold" Foreground="Gray"/>
+                    <TextBox Text="{Binding ClipData.Lyrics}" IsReadOnly="True" Background="Transparent" BorderThickness="0" TextWrapping="Wrap" Margin="0,0,0,10"/>
+
+                    <TextBlock Text="備考" FontWeight="Bold" Foreground="Gray"/>
+                    <TextBox Text="{Binding ClipData.Remarks}" IsReadOnly="True" Background="Transparent" BorderThickness="0" TextWrapping="Wrap"/>
+
+                    <Separator Margin="0,20"/>
+                    <TextBlock Text="再生回数" FontWeight="Bold" Foreground="Gray"/>
+                    <TextBlock Text="{Binding ClipData.PlayCount, StringFormat={}{0} 回}"/>
+                </StackPanel>
+            </ScrollViewer>
+        </Border>
     </Grid>
 </Window>
