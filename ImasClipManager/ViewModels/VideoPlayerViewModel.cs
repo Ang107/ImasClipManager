@@ -152,6 +152,7 @@ namespace ImasClipManager.ViewModels
 
             _dispatcher.Invoke(() =>
             {
+                if (_isDraggingSeek) return;
                 // 相対時間を計算 (現在 - 開始)
                 long relativeTime = currentAbsTime - _clipStartMs;
                 if (relativeTime < 0) relativeTime = 0;

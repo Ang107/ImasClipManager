@@ -46,12 +46,13 @@
                         <TextBlock Text="{Binding CurrentTimeStr}" Foreground="White" Margin="0,0,10,0" VerticalAlignment="Center"/>
 
                         <Slider Grid.Column="1" 
-                                Minimum="0" Maximum="{Binding TotalDurationMs}" 
-                                Value="{Binding CurrentPositionMs}"
-                                PreviewMouseDown="Slider_PreviewMouseDown"
-                                PreviewMouseUp="Slider_PreviewMouseUp"
-                                IsMoveToPointEnabled="True"
-                                VerticalAlignment="Center"/>
+                            Minimum="0" Maximum="{Binding TotalDurationMs}" 
+                            Value="{Binding CurrentPositionMs}"
+                            PreviewMouseDown="Slider_PreviewMouseDown"
+                            PreviewMouseUp="Slider_PreviewMouseUp"
+                            PreviewMouseMove="Slider_PreviewMouseMove"
+                            IsMoveToPointEnabled="False"
+                            VerticalAlignment="Center"/>
 
                         <TextBlock Text="{Binding DurationStr}" Foreground="White" Margin="10,0,0,0" VerticalAlignment="Center"/>
                     </Grid>
@@ -81,7 +82,13 @@
                             <Button Content="+10s" Command="{Binding SeekForwardCommand}" Margin="0,0,10,0" Width="40" Background="Transparent" Foreground="White" BorderBrush="Gray"/>
 
                             <TextBlock Text="🔊" Foreground="White" VerticalAlignment="Center" Margin="0,0,5,0"/>
-                            <Slider Width="80" Minimum="0" Maximum="100" Value="{Binding Volume}" VerticalAlignment="Center"/>
+                            <Slider Width="80" Minimum="0" Maximum="100" 
+                                Value="{Binding Volume}" 
+                                VerticalAlignment="Center"
+                                IsMoveToPointEnabled="False"
+                                PreviewMouseDown="VolumeSlider_PreviewMouseDown"
+                                PreviewMouseUp="VolumeSlider_PreviewMouseUp"
+                                PreviewMouseMove="VolumeSlider_PreviewMouseMove"/>
                         </StackPanel>
 
                         <StackPanel Orientation="Horizontal" Grid.Column="2">
