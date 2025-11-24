@@ -6,19 +6,18 @@
         Title="ImasClipManager" Height="1000" Width="1800" 
         WindowStartupLocation="CenterScreen"
         WindowState="Maximized">
-    
+
+    <Window.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+    </Window.Resources>
+
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
-        
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="250"/>
-            <ColumnDefinition Width="*"/>
-        </Grid.ColumnDefinitions>
 
-        <Menu Grid.Row="0" Grid.ColumnSpan="2" Background="White" BorderBrush="LightGray" BorderThickness="0,0,0,1" Padding="5">
+        <Menu Grid.Row="0" Background="White" BorderBrush="LightGray" BorderThickness="0,0,0,1" Padding="5">
             <MenuItem Header="ファイル(_F)">
                 <MenuItem Header="出演者データをインポート..." Command="{Binding ImportPerformersCommand}"/>
                 <MenuItem Header="出演者データをエクスポート..." Command="{Binding ExportPerformersCommand}"/>
@@ -27,143 +26,172 @@
             </MenuItem>
         </Menu>
 
-        <Grid Grid.Row="1" Grid.Column="0" Background="#F0F0F0">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="*"/>
-                <RowDefinition Height="Auto"/>
-            </Grid.RowDefinitions>
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
 
-            <TextBlock Text="スペース一覧" FontWeight="Bold" Margin="10" FontSize="16"/>
-
-            <ListBox Grid.Row="1" 
-                     ItemsSource="{Binding Spaces}" 
-                     SelectedItem="{Binding SelectedSpace}"
-                     SelectionMode="Single"
-                     BorderThickness="0" Background="Transparent"
-                     Margin="5,0">
-                <ListBox.ItemContainerStyle>
-                    <Style TargetType="ListBoxItem">
-                        <Setter Property="Padding" Value="10,8"/>
-                        <Setter Property="FontSize" Value="14"/>
-                        <Setter Property="Tag" Value="{Binding DataContext, RelativeSource={RelativeSource AncestorType=ListBox}}"/>
-                        <Setter Property="ContextMenu">
-                            <Setter.Value>
-                                <ContextMenu>
-                                    <MenuItem Header="名前を変更"
-                                              Command="{Binding PlacementTarget.Tag.EditSpaceCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
-                                              CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
-                                    <MenuItem Header="削除" Foreground="Red"
-                                              Command="{Binding PlacementTarget.Tag.DeleteSpaceCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
-                                              CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
-                                </ContextMenu>
-                            </Setter.Value>
-                        </Setter>
+            <Grid Grid.Column="0" Background="#F0F0F0">
+                <Grid.Style>
+                    <Style TargetType="Grid">
+                        <Setter Property="Width" Value="250"/>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding IsSpacePaneVisible}" Value="False">
+                                <Setter Property="Width" Value="50"/>
+                            </DataTrigger>
+                        </Style.Triggers>
                     </Style>
-                </ListBox.ItemContainerStyle>
-                <ListBox.ItemTemplate>
-                    <DataTemplate>
-                        <TextBlock Text="{Binding Name}"/>
-                    </DataTemplate>
-                </ListBox.ItemTemplate>
-            </ListBox>
+                </Grid.Style>
 
-            <Button Grid.Row="2" Content="+ スペース追加" 
-                    Command="{Binding AddSpaceCommand}"
-                    Margin="10" Padding="5" Height="35"/>
-        </Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
 
-        <Grid Grid.Row="1" Grid.Column="1" Margin="10">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="*"/>
-            </Grid.RowDefinitions>
+                <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="5,10,0,10">
+                    <ToggleButton IsChecked="{Binding IsSpacePaneVisible}"
+                                  Content="≡" FontSize="18" FontWeight="Bold"
+                                  Width="40" Height="30"
+                                  Background="Transparent" BorderThickness="0"/>
 
-            <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,10">
-                <Button Content="＋ 新規クリップ追加" Padding="15,8" FontSize="14" Command="{Binding AddClipCommand}" Margin="0,0,20,0"/>
+                    <TextBlock Text="スペース一覧" FontWeight="Bold" FontSize="16" 
+                               VerticalAlignment="Center" Margin="10,0,0,0"
+                               Visibility="{Binding IsSpacePaneVisible, Converter={StaticResource BoolToVis}}"/>
+                </StackPanel>
 
-                <TextBlock Text="🔍" VerticalAlignment="Center" Margin="0,0,5,0" Foreground="Gray"/>
-                <TextBox Width="300" 
-                         Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
-                         VerticalContentAlignment="Center" FontSize="14"/>
-            </StackPanel>
+                <ListBox Grid.Row="1" 
+                         ItemsSource="{Binding Spaces}" 
+                         SelectedItem="{Binding SelectedSpace}"
+                         SelectionMode="Single"
+                         BorderThickness="0" Background="Transparent"
+                         Margin="5,0"
+                         Visibility="{Binding IsSpacePaneVisible, Converter={StaticResource BoolToVis}}">
 
-            <DataGrid Grid.Row="1" 
-              ItemsSource="{Binding Clips}" 
-              AutoGenerateColumns="False" 
-              IsReadOnly="True"
-              HeadersVisibility="Column"
-              GridLinesVisibility="All" 
-              HorizontalGridLinesBrush="LightGray" 
-              VerticalGridLinesBrush="LightGray"
-              RowHeight="40"
-              MouseDoubleClick="DataGrid_MouseDoubleClick">
+                    <ListBox.ItemContainerStyle>
+                        <Style TargetType="ListBoxItem">
+                            <Setter Property="Padding" Value="10,8"/>
+                            <Setter Property="FontSize" Value="14"/>
+                            <Setter Property="Tag" Value="{Binding DataContext, RelativeSource={RelativeSource AncestorType=ListBox}}"/>
+                            <Setter Property="ContextMenu">
+                                <Setter.Value>
+                                    <ContextMenu>
+                                        <MenuItem Header="名前を変更"
+                                                  Command="{Binding PlacementTarget.Tag.EditSpaceCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                                  CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
+                                        <MenuItem Header="削除" Foreground="Red"
+                                                  Command="{Binding PlacementTarget.Tag.DeleteSpaceCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                                  CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
+                                    </ContextMenu>
+                                </Setter.Value>
+                            </Setter>
+                        </Style>
+                    </ListBox.ItemContainerStyle>
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding Name}"/>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
 
-                <DataGrid.RowStyle>
-                    <Style TargetType="DataGridRow">
-                        <Setter Property="Tag" Value="{Binding DataContext, RelativeSource={RelativeSource AncestorType=DataGrid}}"/>
-                        <Setter Property="ContextMenu">
-                            <Setter.Value>
-                                <ContextMenu>
-                                    <MenuItem Header="詳細を見る" 
-                                  Command="{Binding PlacementTarget.Tag.ShowClipDetailCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" 
-                                  CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
-                                    <MenuItem Header="編集" 
-                                  Command="{Binding PlacementTarget.Tag.EditClipCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" 
-                                  CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
-                                    <Separator/>
-                                    <MenuItem Header="削除" 
-                                  Command="{Binding PlacementTarget.Tag.DeleteClipCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" 
-                                  CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}" 
-                                  Foreground="Red"/>
-                                </ContextMenu>
-                            </Setter.Value>
-                        </Setter>
-                    </Style>
-                </DataGrid.RowStyle>
+                <Button Grid.Row="2" Content="+ スペース追加" 
+                        Command="{Binding AddSpaceCommand}"
+                        Margin="10" Padding="5" Height="35"
+                        Visibility="{Binding IsSpacePaneVisible, Converter={StaticResource BoolToVis}}"/>
+            </Grid>
 
-                <DataGrid.Resources>
-                    <Style TargetType="TextBlock" x:Key="BaseTextStyle">
-                        <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
-                        <Setter Property="VerticalAlignment" Value="Center"/>
-                        <Setter Property="Margin" Value="5,0"/>
-                    </Style>
+            <Grid Grid.Column="1" Margin="10">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
 
-                    <Style TargetType="TextBlock" x:Key="CenterTextStyle" BasedOn="{StaticResource BaseTextStyle}">
-                        <Setter Property="HorizontalAlignment" Value="Center"/>
-                    </Style>
+                <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,10">
+                    <Button Content="＋ 新規クリップ追加" Padding="15,8" FontSize="14" Command="{Binding AddClipCommand}" Margin="0,0,20,0"/>
 
-                    <Style TargetType="TextBlock" x:Key="LeftTextStyle" BasedOn="{StaticResource BaseTextStyle}">
-                        <Setter Property="HorizontalAlignment" Value="Left"/>
-                    </Style>
+                    <TextBlock Text="🔍" VerticalAlignment="Center" Margin="0,0,5,0" Foreground="Gray"/>
+                    <TextBox Width="300" 
+                             Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
+                             VerticalContentAlignment="Center" FontSize="14"/>
+                </StackPanel>
 
-                    <Style TargetType="DataGridColumnHeader">
-                        <Setter Property="HorizontalContentAlignment" Value="Center"/>
-                        <Setter Property="FontWeight" Value="Bold"/>
-                    </Style>
-                </DataGrid.Resources>
+                <DataGrid Grid.Row="1" 
+                          ItemsSource="{Binding Clips}" 
+                          AutoGenerateColumns="False" 
+                          IsReadOnly="True"
+                          HeadersVisibility="Column"
+                          GridLinesVisibility="All" 
+                          HorizontalGridLinesBrush="LightGray" 
+                          VerticalGridLinesBrush="LightGray"
+                          RowHeight="40"
+                          MouseDoubleClick="DataGrid_MouseDoubleClick">
 
-                <DataGrid.Columns>
-                    <DataGridTemplateColumn Header="サムネ" Width="0.8*">
-                        <DataGridTemplateColumn.CellTemplate>
-                            <DataTemplate>
-                                <Image Source="{Binding ThumbnailPath}" Height="35" Stretch="Uniform" HorizontalAlignment="Center"/>
-                            </DataTemplate>
-                        </DataGridTemplateColumn.CellTemplate>
-                    </DataGridTemplateColumn>
+                    <DataGrid.RowStyle>
+                        <Style TargetType="DataGridRow">
+                            <Setter Property="Tag" Value="{Binding DataContext, RelativeSource={RelativeSource AncestorType=DataGrid}}"/>
+                            <Setter Property="ContextMenu">
+                                <Setter.Value>
+                                    <ContextMenu>
+                                        <MenuItem Header="詳細を見る" 
+                                                  Command="{Binding PlacementTarget.Tag.ShowClipDetailCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" 
+                                                  CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
+                                        <MenuItem Header="編集" 
+                                                  Command="{Binding PlacementTarget.Tag.EditClipCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" 
+                                                  CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
+                                        <Separator/>
+                                        <MenuItem Header="削除" 
+                                                  Command="{Binding PlacementTarget.Tag.DeleteClipCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" 
+                                                  CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}" 
+                                                  Foreground="Red"/>
+                                    </ContextMenu>
+                                </Setter.Value>
+                            </Setter>
+                        </Style>
+                    </DataGrid.RowStyle>
 
-                    <DataGridTextColumn Header="曲名" Binding="{Binding SongTitle}" Width="1.5*" ElementStyle="{StaticResource CenterTextStyle}"/>
-                    <DataGridTextColumn Header="公演名" Binding="{Binding ConcertName}" Width="1.5*" ElementStyle="{StaticResource CenterTextStyle}"/>
-                    <DataGridTextColumn Header="公演日" Binding="{Binding ConcertDate, StringFormat=yyyy/MM/dd}" Width="0.8*" ElementStyle="{StaticResource CenterTextStyle}"/>
-                    <DataGridTextColumn Header="形式" Binding="{Binding LiveType, Converter={StaticResource LiveTypeConv}}" Width="0.6*" ElementStyle="{StaticResource CenterTextStyle}"/>
-                    <DataGridTextColumn Header="ブランド" Binding="{Binding Brands, Converter={StaticResource BrandTypeConv}}" Width="1.2*" ElementStyle="{StaticResource CenterTextStyle}"/>
-                    <DataGridTextColumn Header="出演者" Binding="{Binding Converter={StaticResource ClipPerformersConv}}" Width="2*" ElementStyle="{StaticResource LeftTextStyle}"/>
-                    <DataGridTextColumn Header="歌詞" Binding="{Binding Lyrics}" Width="2*" ElementStyle="{StaticResource LeftTextStyle}"/>
-                    <DataGridTextColumn Header="備考" Binding="{Binding Remarks}" Width="1.5*" ElementStyle="{StaticResource LeftTextStyle}"/>
+                    <DataGrid.Resources>
+                        <Style TargetType="TextBlock" x:Key="BaseTextStyle">
+                            <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+                            <Setter Property="VerticalAlignment" Value="Center"/>
+                            <Setter Property="Margin" Value="5,0"/>
+                        </Style>
 
-                    <DataGridTextColumn Header="再生数" Binding="{Binding PlayCount}" Width="0.5*" ElementStyle="{StaticResource CenterTextStyle}"/>
-                </DataGrid.Columns>
-            </DataGrid>
+                        <Style TargetType="TextBlock" x:Key="CenterTextStyle" BasedOn="{StaticResource BaseTextStyle}">
+                            <Setter Property="HorizontalAlignment" Value="Center"/>
+                        </Style>
+
+                        <Style TargetType="TextBlock" x:Key="LeftTextStyle" BasedOn="{StaticResource BaseTextStyle}">
+                            <Setter Property="HorizontalAlignment" Value="Left"/>
+                        </Style>
+
+                        <Style TargetType="DataGridColumnHeader">
+                            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+                            <Setter Property="FontWeight" Value="Bold"/>
+                        </Style>
+                    </DataGrid.Resources>
+
+                    <DataGrid.Columns>
+                        <DataGridTemplateColumn Header="サムネ" Width="0.8*">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <Image Source="{Binding ThumbnailPath}" Height="35" Stretch="Uniform" HorizontalAlignment="Center"/>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+
+                        <DataGridTextColumn Header="曲名" Binding="{Binding SongTitle}" Width="1.5*" ElementStyle="{StaticResource CenterTextStyle}"/>
+                        <DataGridTextColumn Header="公演名" Binding="{Binding ConcertName}" Width="1.5*" ElementStyle="{StaticResource CenterTextStyle}"/>
+                        <DataGridTextColumn Header="公演日" Binding="{Binding ConcertDate, StringFormat=yyyy/MM/dd}" Width="0.8*" ElementStyle="{StaticResource CenterTextStyle}"/>
+                        <DataGridTextColumn Header="形式" Binding="{Binding LiveType, Converter={StaticResource LiveTypeConv}}" Width="0.6*" ElementStyle="{StaticResource CenterTextStyle}"/>
+                        <DataGridTextColumn Header="ブランド" Binding="{Binding Brands, Converter={StaticResource BrandTypeConv}}" Width="1.2*" ElementStyle="{StaticResource CenterTextStyle}"/>
+                        <DataGridTextColumn Header="出演者" Binding="{Binding Converter={StaticResource ClipPerformersConv}}" Width="2*" ElementStyle="{StaticResource LeftTextStyle}"/>
+                        <DataGridTextColumn Header="歌詞" Binding="{Binding Lyrics}" Width="2*" ElementStyle="{StaticResource LeftTextStyle}"/>
+                        <DataGridTextColumn Header="備考" Binding="{Binding Remarks}" Width="1.5*" ElementStyle="{StaticResource LeftTextStyle}"/>
+                        <DataGridTextColumn Header="再生数" Binding="{Binding PlayCount}" Width="0.5*" ElementStyle="{StaticResource CenterTextStyle}"/>
+                    </DataGrid.Columns>
+                </DataGrid>
+            </Grid>
         </Grid>
     </Grid>
 </Window>
