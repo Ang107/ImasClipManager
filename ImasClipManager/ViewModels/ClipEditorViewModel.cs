@@ -56,7 +56,7 @@ namespace ImasClipManager.ViewModels
             }
         }
 
-        public ClipEditorViewModel(Clip? clip, EditorMode mode)
+        public ClipEditorViewModel(Clip? clip, EditorMode mode, int spaceId)
         {
             Mode = mode;
 
@@ -85,8 +85,7 @@ namespace ImasClipManager.ViewModels
             {
                 ClipData = new Clip
                 {
-                    SpaceId = 1,
-                    ConcertDate = DateTime.Today,
+                    SpaceId = spaceId,
                     LiveType = LiveType.Seiyuu,
                     StartTimeMs = 0,
                     Brands = BrandType.None

@@ -154,7 +154,7 @@ namespace ImasClipManager.ViewModels
             }
 
             // ViewModelを作成してWindowに渡す
-            var vm = new ClipEditorViewModel(null, EditorMode.Add);
+            var vm = new ClipEditorViewModel(null, EditorMode.Add, SelectedSpace.Id);
             var window = new ClipEditorWindow(vm);
 
             if (window.ShowDialog() == true)
@@ -170,7 +170,7 @@ namespace ImasClipManager.ViewModels
         {
             if (clip == null) return;
 
-            var vm = new ClipEditorViewModel(clip, EditorMode.Edit);
+            var vm = new ClipEditorViewModel(clip, EditorMode.Edit, clip.SpaceId);
             var window = new ClipEditorWindow(vm);
 
             if (window.ShowDialog() == true)
@@ -185,7 +185,7 @@ namespace ImasClipManager.ViewModels
         {
             if (clip == null) return;
 
-            var vm = new ClipEditorViewModel(clip, EditorMode.Detail);
+            var vm = new ClipEditorViewModel(clip, EditorMode.Detail, clip.SpaceId);
             var window = new ClipEditorWindow(vm);
             window.ShowDialog();
         }

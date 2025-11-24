@@ -26,14 +26,15 @@
                 <Grid Margin="0,0,0,15" Background="#F5F5F5">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto"/>
-                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="103*"/>
+                        <ColumnDefinition Width="270*"/>
                     </Grid.ColumnDefinitions>
 
-                    <Border Grid.Column="0" Width="160" Height="90" BorderBrush="Gray" BorderThickness="1" Background="Black" Margin="10">
+                    <Border Grid.Column="0" Width="160" Height="90" BorderBrush="Gray" BorderThickness="1" Background="Black" Margin="10,10,10,10">
                         <Image Source="{Binding ClipData.ThumbnailPath}" Stretch="Uniform"/>
                     </Border>
 
-                    <StackPanel Grid.Column="1" VerticalAlignment="Bottom" Margin="0,0,10,10">
+                    <StackPanel Grid.Column="1" VerticalAlignment="Bottom" Margin="0,0,10,10" Grid.ColumnSpan="2">
                         <TextBlock Text="サムネイル設定" FontWeight="Bold" Margin="0,0,0,5"/>
                         <CheckBox Content="自動生成 (区間の中央)" 
                                   IsChecked="{Binding ClipData.IsAutoThumbnail}" 
@@ -68,22 +69,63 @@
                     </Grid.ColumnDefinitions>
 
                     <StackPanel Grid.Column="0">
-                        <TextBlock Text="再生開始 (mm:ss / hh:mm:ss):" FontWeight="Bold" FontSize="11"/>
-                        <TextBox x:Name="StartTimeBox" 
-                                 Text="{Binding ClipData.StartTimeStr, UpdateSourceTrigger=LostFocus}" 
-                                 Margin="0,5,0,0" 
-                                 IsEnabled="{Binding IsEditable}" 
-                                 LostFocus="Time_LostFocus"/>
+                        <TextBlock Text="再生開始:" FontWeight="Bold" FontSize="11"/>
+
+                        <Grid Margin="0,5,0,0">
+                            <TextBox x:Name="StartTimeBox" 
+                                     Text="{Binding ClipData.StartTimeStr, UpdateSourceTrigger=LostFocus}" 
+                                     IsEnabled="{Binding IsEditable}" 
+                                     LostFocus="Time_LostFocus"
+                                     VerticalContentAlignment="Center"
+                                     Background="Transparent"/>
+
+                            <TextBlock Text="例: 10:00, 1:23:45 (空欄で最初から)" 
+                                       Foreground="Gray" Opacity="0.5"
+                                       IsHitTestVisible="False" 
+                                       VerticalAlignment="Center" Margin="5,0,0,0">
+                                <TextBlock.Style>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding Text, ElementName=StartTimeBox}" Value="">
+                                                <Setter Property="Visibility" Value="Visible"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBlock.Style>
+                            </TextBlock>
+                        </Grid>
                         <TextBlock Text="{Binding StartTimeErrorMessage}" Foreground="Red" FontSize="11" TextWrapping="Wrap" Margin="0,2,0,0"/>
                     </StackPanel>
 
                     <StackPanel Grid.Column="2">
                         <TextBlock Text="再生終了 (mm:ss / hh:mm:ss):" FontWeight="Bold" FontSize="11"/>
-                        <TextBox x:Name="EndTimeBox" 
-                                 Text="{Binding ClipData.EndTimeStr, UpdateSourceTrigger=LostFocus}" 
-                                 Margin="0,5,0,0" 
-                                 IsEnabled="{Binding IsEditable}" 
-                                 LostFocus="Time_LostFocus"/>
+
+                        <Grid Margin="0,5,0,0">
+                            <TextBox x:Name="EndTimeBox" 
+                                     Text="{Binding ClipData.EndTimeStr, UpdateSourceTrigger=LostFocus}" 
+                                     IsEnabled="{Binding IsEditable}" 
+                                     LostFocus="Time_LostFocus"
+                                     VerticalContentAlignment="Center"
+                                     Background="Transparent"/>
+
+                            <TextBlock Text="例: 10:00, 1:23:45 (空欄で最後まで)" 
+                                       Foreground="Gray" Opacity="0.5"
+                                       IsHitTestVisible="False" 
+                                       VerticalAlignment="Center" Margin="5,0,0,0">
+                                <TextBlock.Style>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding Text, ElementName=EndTimeBox}" Value="">
+                                                <Setter Property="Visibility" Value="Visible"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBlock.Style>
+                            </TextBlock>
+                        </Grid>
+
                         <TextBlock Text="{Binding EndTimeErrorMessage}" Foreground="Red" FontSize="11" TextWrapping="Wrap" Margin="0,2,0,0"/>
                     </StackPanel>
                 </Grid>
@@ -101,8 +143,13 @@
                         <ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
                     <StackPanel Grid.Column="0">
-                        <TextBlock Text="公演日:" FontWeight="Bold"/>
-                        <DatePicker SelectedDate="{Binding ClipData.ConcertDate}" Margin="0,5,0,0" IsEnabled="{Binding IsEditable}"/>
+                        <TextBlock Text="公演日 (例: 2025/01/01):" FontWeight="Bold"/>
+
+                        <DatePicker x:Name="ConcertDateBox" 
+                                    SelectedDate="{Binding ClipData.ConcertDate}" 
+                                    IsEnabled="{Binding IsEditable}"
+                                    VerticalContentAlignment="Center"
+                                    Margin="0,5,0,0"/>
                     </StackPanel>
                     <StackPanel Grid.Column="2">
                         <TextBlock Text="ライブ形式:" FontWeight="Bold"/>

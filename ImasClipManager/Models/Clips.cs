@@ -47,15 +47,14 @@ namespace ImasClipManager.Models
         [NotMapped]
         public string StartTimeStr
         {
-            get => TimeSpan.FromMilliseconds(StartTimeMs).ToString(@"hh\:mm\:ss");
+            // 変更: 0の場合は空文字を返す
+            get => StartTimeMs == 0 ? "" : TimeSpan.FromMilliseconds(StartTimeMs).ToString(@"hh\:mm\:ss");
             set
             {
-                // 共通ロジックを使用
                 if (TimeHelper.TryParseTime(value, out long ms))
                 {
                     StartTimeMs = ms;
                 }
-                // ※パース失敗時は値を更新しない、あるいは0にするなど仕様に合わせて調整
             }
         }
 
@@ -79,7 +78,7 @@ namespace ImasClipManager.Models
         public string ConcertName { get; set; } = string.Empty;
         public BrandType Brands { get; set; } = BrandType.None;
         public LiveType LiveType { get; set; } = LiveType.Seiyuu;
-        public DateTime ConcertDate { get; set; } = DateTime.Today;
+        public DateTime? ConcertDate { get; set; } = null;
         public string SongTitle { get; set; } = string.Empty;
 
         // ★変更: UIに通知したいプロパティを ObservableProperty 形式に変更
