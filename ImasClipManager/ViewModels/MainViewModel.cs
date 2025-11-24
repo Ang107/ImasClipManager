@@ -145,7 +145,7 @@ namespace ImasClipManager.ViewModels
         // --- クリップ操作コマンド ---
 
         [RelayCommand]
-        public async Task AddClip() // void -> async Task
+        public async Task AddClip()
         {
             if (SelectedSpace == null)
             {
@@ -153,11 +153,13 @@ namespace ImasClipManager.ViewModels
                 return;
             }
 
-            var window = new ClipEditorWindow(null, EditorMode.Add);
+            // ViewModelを作成してWindowに渡す
+            var vm = new ClipEditorViewModel(null, EditorMode.Add);
+            var window = new ClipEditorWindow(vm);
+
             if (window.ShowDialog() == true)
             {
                 window.ClipData.SpaceId = SelectedSpace.Id;
-                // 変更点: await SaveClipToDbAsync(...)
                 await SaveClipToDbAsync(window.ClipData);
                 await LoadClipsAsync();
             }
@@ -167,31 +169,13 @@ namespace ImasClipManager.ViewModels
         public async Task EditClip(Clip clip)
         {
             if (clip == null) return;
-            var window = new ClipEditorWindow(clip, EditorMode.Edit);
+
+            var vm = new ClipEditorViewModel(clip, EditorMode.Edit);
+            var window = new ClipEditorWindow(vm);
+
             if (window.ShowDialog() == true)
             {
-                // 変更点: await UpdateClipInDbAsync(...)
                 await UpdateClipInDbAsync(window.ClipData);
-                await LoadClipsAsync();
-            }
-        }
-
-        [RelayCommand]
-        public async Task DeleteClip(Clip clip)
-        {
-            if (clip == null) return;
-            if (MessageBox.Show("クリップを削除しますか？", "確認", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
-            {
-                using (var db = new AppDbContext())
-                {
-                    // Find -> await FindAsync
-                    var target = await db.Clips.FindAsync(clip.Id); // ★ここを非同期に
-                    if (target != null)
-                    {
-                        db.Clips.Remove(target);
-                        await db.SaveChangesAsync();
-                    }
-                }
                 await LoadClipsAsync();
             }
         }
@@ -200,8 +184,12 @@ namespace ImasClipManager.ViewModels
         public void ShowClipDetail(Clip clip)
         {
             if (clip == null) return;
-            new ClipEditorWindow(clip, EditorMode.Detail).ShowDialog();
+
+            var vm = new ClipEditorViewModel(clip, EditorMode.Detail);
+            var window = new ClipEditorWindow(vm);
+            window.ShowDialog();
         }
+
 
         [RelayCommand]
         public async Task PlayClip(Clip clip)
@@ -233,7 +221,13 @@ namespace ImasClipManager.ViewModels
         public async Task AddSpace()
         {
             var input = new InputWindow("新しいスペース名:");
-            if (input.ShowDialog() == true && !string.IsNullOrWhiteSpace(input.InputText))
+
+            // バリデーションルールを設定 (空文字チェック)
+            input.Validator = (text) =>
+                string.IsNullOrWhiteSpace(text) ? "スペース名を入力してください。" : null;
+
+            // ShowDialog() が true で返ってくるのは、バリデーションを通過してOKが押された場合のみ
+            if (input.ShowDialog() == true)
             {
                 using (var db = new AppDbContext())
                 {
@@ -241,8 +235,7 @@ namespace ImasClipManager.ViewModels
                     db.Spaces.Add(newSpace);
                     await db.SaveChangesAsync();
                 }
-                await LoadSpacesAsync(); // リロードして反映
-                // 追加したスペースを選択状態にする
+                await LoadSpacesAsync();
                 SelectedSpace = Spaces.LastOrDefault();
             }
         }
@@ -253,7 +246,12 @@ namespace ImasClipManager.ViewModels
             if (space == null) return;
 
             var input = new InputWindow("スペース名を変更:", space.Name);
-            if (input.ShowDialog() == true && !string.IsNullOrWhiteSpace(input.InputText))
+
+            // バリデーションルールを設定
+            input.Validator = (text) =>
+                string.IsNullOrWhiteSpace(text) ? "スペース名は空にできません。" : null;
+
+            if (input.ShowDialog() == true)
             {
                 using (var db = new AppDbContext())
                 {
@@ -261,35 +259,6 @@ namespace ImasClipManager.ViewModels
                     if (target != null)
                     {
                         target.Name = input.InputText.Trim();
-                        await db.SaveChangesAsync();
-                    }
-                }
-                await LoadSpacesAsync();
-            }
-        }
-
-        [RelayCommand]
-        public async Task DeleteSpace(Space space)
-        {
-            if (space == null) return;
-
-            // 最後の1つは削除させないなどの制御が必要ならここに入れる
-            if (Spaces.Count <= 1)
-            {
-                MessageBox.Show("最後のスペースは削除できません。", "エラー", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
-            }
-
-            var res = MessageBox.Show($"スペース「{space.Name}」を削除しますか？\n※含まれるクリップもすべて削除されます。",
-                                      "削除確認", MessageBoxButton.YesNo, MessageBoxImage.Warning);
-            if (res == MessageBoxResult.Yes)
-            {
-                using (var db = new AppDbContext())
-                {
-                    var target = await db.Spaces.FindAsync(space.Id);
-                    if (target != null)
-                    {
-                        db.Spaces.Remove(target); // Cascade Delete設定によりClipsも消える
                         await db.SaveChangesAsync();
                     }
                 }

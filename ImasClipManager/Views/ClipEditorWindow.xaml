@@ -35,13 +35,11 @@
 
                     <StackPanel Grid.Column="1" VerticalAlignment="Bottom" Margin="0,0,10,10">
                         <TextBlock Text="サムネイル設定" FontWeight="Bold" Margin="0,0,0,5"/>
-
                         <CheckBox Content="自動生成 (区間の中央)" 
                                   IsChecked="{Binding ClipData.IsAutoThumbnail}" 
                                   Margin="0,0,0,5" IsEnabled="{Binding IsEditable}"/>
-
                         <StackPanel Orientation="Horizontal">
-                            <Button Content="手動再生成" Click="RegenerateThumbnail_Click" Width="100" Margin="0,0,10,0" 
+                            <Button Content="手動再生成" Command="{Binding RegenerateThumbnailCommand}" Width="100" Margin="0,0,10,0" 
                                     IsEnabled="{Binding IsEditable}" ToolTip="現在の設定でサムネイルを作り直します"/>
                             <Button Content="ファイル選択..." Click="SelectThumbnail_Click" Width="100" 
                                     IsEnabled="{Binding IsEditable}"/>
@@ -56,11 +54,11 @@
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
                     <TextBox x:Name="FilePathBox" Text="{Binding ClipData.FilePath}" 
-                             VerticalContentAlignment="Center" IsEnabled="{Binding IsEditable}"/>
+                          VerticalContentAlignment="Center" IsEnabled="{Binding IsEditable}"/>
                     <Button Grid.Column="1" Content="..." Width="30" Margin="5,0,0,0" 
                             Click="SelectFile_Click" IsEnabled="{Binding IsEditable}"/>
                 </Grid>
-                <TextBlock x:Name="FilePathErrorText" Foreground="Red" FontWeight="Bold" Margin="0,0,0,15"/>
+                <TextBlock Text="{Binding FilePathErrorMessage}" Foreground="Red" FontWeight="Bold" Margin="0,0,0,15"/>
 
                 <Grid Margin="0,0,0,15">
                     <Grid.ColumnDefinitions>
@@ -76,7 +74,7 @@
                                  Margin="0,5,0,0" 
                                  IsEnabled="{Binding IsEditable}" 
                                  LostFocus="Time_LostFocus"/>
-                        <TextBlock x:Name="StartTimeErrorText" Foreground="Red" FontSize="11" TextWrapping="Wrap" Margin="0,2,0,0"/>
+                        <TextBlock Text="{Binding StartTimeErrorMessage}" Foreground="Red" FontSize="11" TextWrapping="Wrap" Margin="0,2,0,0"/>
                     </StackPanel>
 
                     <StackPanel Grid.Column="2">
@@ -86,7 +84,7 @@
                                  Margin="0,5,0,0" 
                                  IsEnabled="{Binding IsEditable}" 
                                  LostFocus="Time_LostFocus"/>
-                        <TextBlock x:Name="EndTimeErrorText" Foreground="Red" FontSize="11" TextWrapping="Wrap" Margin="0,2,0,0"/>
+                        <TextBlock Text="{Binding EndTimeErrorMessage}" Foreground="Red" FontSize="11" TextWrapping="Wrap" Margin="0,2,0,0"/>
                     </StackPanel>
                 </Grid>
 
@@ -110,8 +108,7 @@
                         <TextBlock Text="ライブ形式:" FontWeight="Bold"/>
                         <ComboBox ItemsSource="{Binding Source={StaticResource LiveTypeEnum}}" 
                                   SelectedItem="{Binding ClipData.LiveType}" 
-                                  Margin="0,5,0,0" 
-                                  IsEnabled="{Binding IsEditable}">
+                                  Margin="0,5,0,0" IsEnabled="{Binding IsEditable}">
                             <ComboBox.ItemTemplate>
                                 <DataTemplate>
                                     <TextBlock Text="{Binding Converter={StaticResource LiveTypeConv}}"/>
@@ -131,10 +128,8 @@
                         </ItemsControl.ItemsPanel>
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
-                                <CheckBox Content="{Binding Name}" 
-                                          IsChecked="{Binding IsSelected}" 
-                                          IsEnabled="{Binding IsEnabled}"
-                                          Margin="0,0,15,5"/>
+                                <CheckBox Content="{Binding Name}" IsChecked="{Binding IsSelected}" 
+                                          IsEnabled="{Binding IsEnabled}" Margin="0,0,15,5"/>
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
@@ -143,33 +138,25 @@
                 <StackPanel Orientation="Horizontal" Margin="0,15,0,5">
                     <TextBlock Text="出演者:" FontWeight="Bold" VerticalAlignment="Center"/>
                     <Button Content="選択..." Width="60" Margin="10,0,0,0" 
-                            Click="SelectPerformers_Click" 
-                            IsEnabled="{Binding IsEditable}" 
+                            Click="SelectPerformers_Click" IsEnabled="{Binding IsEditable}" 
                             VerticalAlignment="Center" Height="22"/>
                 </StackPanel>
 
-                <TextBox x:Name="PerformersTextBox" 
-                         Text="{Binding PerformersDisplayText, Mode=OneWay}"
-                         IsReadOnly="True" 
-                         VerticalContentAlignment="Top" 
+                <TextBox Text="{Binding PerformersDisplayText, Mode=OneWay}"
+                         IsReadOnly="True" VerticalContentAlignment="Top" 
                          MinHeight="50" Height="Auto" MaxHeight="200"
-                         TextWrapping="Wrap" 
-                         AcceptsReturn="True"
+                         TextWrapping="Wrap" AcceptsReturn="True"
                          VerticalScrollBarVisibility="Auto"
                          Margin="0,0,0,15" Background="#F0F0F0"/>
 
                 <TextBlock Text="歌詞:" FontWeight="Bold"/>
-                <TextBox Text="{Binding ClipData.Lyrics}" 
-                         MinHeight="60" Height="Auto" MaxHeight="300"
-                         AcceptsReturn="True" TextWrapping="Wrap"
-                         VerticalScrollBarVisibility="Auto" 
+                <TextBox Text="{Binding ClipData.Lyrics}" MinHeight="60" Height="Auto" MaxHeight="300"
+                         AcceptsReturn="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" 
                          Margin="0,5,0,15" IsEnabled="{Binding IsEditable}"/>
 
                 <TextBlock Text="備考:" FontWeight="Bold"/>
-                <TextBox Text="{Binding ClipData.Remarks}" 
-                         MinHeight="60" Height="Auto" MaxHeight="300"
-                         AcceptsReturn="True" TextWrapping="Wrap"
-                         VerticalScrollBarVisibility="Auto" 
+                <TextBox Text="{Binding ClipData.Remarks}" MinHeight="60" Height="Auto" MaxHeight="300"
+                         AcceptsReturn="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" 
                          Margin="0,5,0,0" IsEnabled="{Binding IsEditable}"/>
             </StackPanel>
         </ScrollViewer>
