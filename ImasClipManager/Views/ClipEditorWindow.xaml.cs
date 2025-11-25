@@ -7,6 +7,7 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using ImasClipManager.Services;
 
 namespace ImasClipManager.Views
 {
@@ -83,14 +84,25 @@ namespace ImasClipManager.Views
         }
 
         // サムネイル画像選択
-        private void SelectThumbnail_Click(object sender, RoutedEventArgs e)
+        private async void SelectThumbnail_Click(object sender, RoutedEventArgs e)
         {
             var dialog = new OpenFileDialog();
             dialog.Filter = "画像ファイル|*.jpg;*.png;*.bmp|すべてのファイル|*.*";
             if (dialog.ShowDialog() == true)
             {
-                _viewModel.ClipData.ThumbnailPath = dialog.FileName;
-                _viewModel.ClipData.IsAutoThumbnail = false;
+                try
+                {
+                    var service = new ThumbnailService();
+                    // 選択された画像をリサイズして取り込み
+                    string newPath = await service.ImportThumbnailAsync(dialog.FileName);
+
+                    _viewModel.ClipData.ThumbnailPath = newPath;
+                    _viewModel.ClipData.IsAutoThumbnail = false;
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"画像の取り込みに失敗しました: {ex.Message}", "エラー", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
             }
         }
 

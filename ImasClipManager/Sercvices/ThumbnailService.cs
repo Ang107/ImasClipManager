@@ -64,7 +64,8 @@ namespace ImasClipManager.Services
                 conversion.SetOutput(outputPath)
                           .SetOverwriteOutput(true)
                           .AddParameter("-frames:v 1")
-                          .AddParameter("-f image2");
+                          .AddParameter("-f image2")
+                          .AddParameter("-vf \"scale=-1:'min(100,ih)'\"");
 
                 // 3. 実行
                 await conversion.Start();
@@ -89,6 +90,53 @@ namespace ImasClipManager.Services
             {
                 Debug.WriteLine($"[ERROR] 予期せぬエラー: {ex.Message}");
                 throw new Exception($"予期せぬエラーが発生しました: {ex.Message}", ex);
+            }
+        }
+
+        public async Task<string> ImportThumbnailAsync(string inputPath)
+        {
+            await InitializeAsync();
+
+            try
+            {
+                var mediaInfo = await FFmpeg.GetMediaInfo(inputPath);
+                var videoStream = mediaInfo.VideoStreams.FirstOrDefault();
+
+                // ストリームが見つからない場合はコピー
+                if (videoStream == null)
+                {
+                    string ext = Path.GetExtension(inputPath);
+                    string fileName = $"{Guid.NewGuid()}{ext}";
+                    string outputPath = Path.Combine(_thumbnailFolder, fileName);
+                    File.Copy(inputPath, outputPath, true);
+                    return outputPath;
+                }
+                else
+                {
+                    string ext = Path.GetExtension(inputPath);
+                    if (string.IsNullOrEmpty(ext)) ext = ".jpg";
+                    string fileName = $"{Guid.NewGuid()}{ext}";
+                    string outputPath = Path.Combine(_thumbnailFolder, fileName);
+
+                    var conversion = FFmpeg.Conversions.New();
+                    conversion.AddStream(videoStream)
+                              .SetOutput(outputPath)
+                              .SetOverwriteOutput(true)
+                              .AddParameter("-vf \"scale=-1:'min(100,ih)'\"");
+
+                    await conversion.Start();
+                    return outputPath;
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[ThumbnailService] Import Error: {ex.Message}");
+                // 失敗時はコピー
+                string ext = Path.GetExtension(inputPath);
+                string fileName = $"{Guid.NewGuid()}{ext}";
+                string outputPath = Path.Combine(_thumbnailFolder, fileName);
+                File.Copy(inputPath, outputPath, true);
+                return outputPath;
             }
         }
     }

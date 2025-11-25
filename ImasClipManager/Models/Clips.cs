@@ -47,7 +47,7 @@ namespace ImasClipManager.Models
         [NotMapped]
         public string StartTimeStr
         {
-            // 変更: 0の場合は空文字を返す
+
             get => StartTimeMs.HasValue ? TimeSpan.FromMilliseconds(StartTimeMs.Value).ToString(@"hh\:mm\:ss") : "";
             set
             {
