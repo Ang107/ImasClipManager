@@ -20,6 +20,9 @@ namespace ImasClipManager.ViewModels
 {
     public partial class MainViewModel : ObservableObject
     {
+        private readonly Func<AppDbContext> _dbFactory; // DB作成ファクトリ
+        private readonly ThumbnailService _thumbnailService;
+        private readonly CsvDataService _csvDataService;
         // --- クリップ関連 ---
         public ObservableCollection<Clip> Clips { get; set; } = new ObservableCollection<Clip>();
         private ICollectionView _clipsView;
@@ -81,12 +84,16 @@ namespace ImasClipManager.ViewModels
             }
         }
 
-        public MainViewModel()
+        public MainViewModel(Func<AppDbContext> dbFactory, ThumbnailService thumbnailService, CsvDataService csvDataService)
         {
-            _ = InitializeAsync();
+            _dbFactory = dbFactory;
+            _thumbnailService = thumbnailService;
+            _csvDataService = csvDataService;
             // クリップのフィルタ設定
             _clipsView = CollectionViewSource.GetDefaultView(Clips);
             _clipsView.Filter = FilterClips;
+            _ = InitializeAsync();
+
         }
 
         private async Task InitializeAsync()
@@ -97,7 +104,7 @@ namespace ImasClipManager.ViewModels
         // --- データ読み込みロジック ---
         public async Task LoadSpacesAsync()
         {
-            using (var db = new AppDbContext())
+            using (var db = _dbFactory())
             {
                 await db.Database.MigrateAsync();
                 var spaceList = await db.Spaces.OrderBy(s => s.Id).ToListAsync();
@@ -132,7 +139,7 @@ namespace ImasClipManager.ViewModels
             Clips.Clear();
             if (SelectedSpace == null) return;
 
-            using (var db = new AppDbContext())
+            using (var db = _dbFactory())
             {
                 // 選択中のスペースIDでフィルタリング + PerformersをIncludeして即時ロード
                 var list = await db.Clips
@@ -224,7 +231,7 @@ namespace ImasClipManager.ViewModels
             }
 
             // ViewModelを作成してWindowに渡す
-            var vm = new ClipEditorViewModel(null, EditorMode.Add, SelectedSpace.Id);
+            var vm = new ClipEditorViewModel(null, EditorMode.Add, SelectedSpace.Id, _thumbnailService);
             var window = new ClipEditorWindow(vm);
 
             if (window.ShowDialog() == true)
@@ -240,7 +247,7 @@ namespace ImasClipManager.ViewModels
         {
             if (clip == null) return;
 
-            var vm = new ClipEditorViewModel(clip, EditorMode.Edit, clip.SpaceId);
+            var vm = new ClipEditorViewModel(clip, EditorMode.Edit, clip.SpaceId, _thumbnailService);
             var window = new ClipEditorWindow(vm);
 
             if (window.ShowDialog() == true)
@@ -256,15 +263,14 @@ namespace ImasClipManager.ViewModels
             if (clip == null) return;
             if (MessageBox.Show("クリップを削除しますか？", "確認", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
             {
-                using (var db = new AppDbContext())
+                using (var db = _dbFactory())
                 {
                     var target = await db.Clips.FindAsync(clip.Id);
                     if (target != null)
                     {
                         if (!string.IsNullOrEmpty(target.ThumbnailPath))
                         {
-                            var service = new ThumbnailService();
-                            service.DeleteFile(target.ThumbnailPath);
+                            _thumbnailService.DeleteFile(target.ThumbnailPath);
                         }
                         db.Clips.Remove(target);
                         await db.SaveChangesAsync();
@@ -279,7 +285,7 @@ namespace ImasClipManager.ViewModels
         {
             if (clip == null) return;
 
-            var vm = new ClipEditorViewModel(clip, EditorMode.Detail, clip.SpaceId);
+            var vm = new ClipEditorViewModel(clip, EditorMode.Detail, clip.SpaceId, _thumbnailService);
             var window = new ClipEditorWindow(vm);
             window.ShowDialog();
         }
@@ -323,7 +329,7 @@ namespace ImasClipManager.ViewModels
             // ShowDialog() が true で返ってくるのは、バリデーションを通過してOKが押された場合のみ
             if (input.ShowDialog() == true)
             {
-                using (var db = new AppDbContext())
+                using (var db = _dbFactory())
                 {
                     var newSpace = new Space { Name = input.InputText.Trim() };
                     db.Spaces.Add(newSpace);
@@ -347,7 +353,7 @@ namespace ImasClipManager.ViewModels
 
             if (input.ShowDialog() == true)
             {
-                using (var db = new AppDbContext())
+                using (var db = _dbFactory())
                 {
                     var target = await db.Spaces.FindAsync(space.Id);
                     if (target != null)
@@ -399,7 +405,7 @@ namespace ImasClipManager.ViewModels
 
         private async Task SaveClipToDbAsync(Clip clip)
         {
-            using (var db = new AppDbContext())
+            using (var db = _dbFactory())
             {
                 if (clip.Performers != null)
                 {
@@ -425,7 +431,7 @@ namespace ImasClipManager.ViewModels
 
         private async Task UpdateClipInDbAsync(Clip clip)
         {
-            using (var db = new AppDbContext())
+            using (var db = _dbFactory())
             {
                 // FirstOrDefault -> await FirstOrDefaultAsync
                 var existingClip = await db.Clips
@@ -486,11 +492,10 @@ namespace ImasClipManager.ViewModels
             {
                 try // ★追加: エラー監視開始
                 {
-                    using (var db = new AppDbContext())
+                    using (var db = _dbFactory())
                     {
                         var list = db.Performers.OrderBy(p => p.Id).ToList();
-                        var service = new CsvDataService();
-                        service.ExportPerformers(dialog.FileName, list);
+                        _csvDataService.ExportPerformers(dialog.FileName, list);
                     }
                     MessageBox.Show("エクスポートが完了しました。", "完了", MessageBoxButton.OK, MessageBoxImage.Information);
                 }
@@ -519,9 +524,9 @@ namespace ImasClipManager.ViewModels
                 try
                 {
                     var service = new CsvDataService();
-                    var records = service.ImportPerformers(dialog.FileName);
+                    var records = _csvDataService.ImportPerformers(dialog.FileName);
 
-                    using (var db = new AppDbContext())
+                    using (var db = _dbFactory())
                     {
                         int addedCount = 0;
                         int updatedCount = 0;
@@ -586,7 +591,7 @@ namespace ImasClipManager.ViewModels
             }
 
             int count = 0;
-            using (var db = new AppDbContext())
+            using (var db = _dbFactory())
             {
                 // 全クリップのサムネパスを取得
                 var allPaths = await db.Clips
@@ -594,8 +599,7 @@ namespace ImasClipManager.ViewModels
                                        .Select(c => c.ThumbnailPath)
                                        .ToListAsync();
 
-                var service = new ThumbnailService();
-                count = await service.CleanUpUnusedThumbnailsAsync(allPaths);
+                count = await _thumbnailService.CleanUpUnusedThumbnailsAsync(allPaths);
             }
 
             MessageBox.Show($"クリーンアップが完了しました。\n削除されたファイル: {count} 件", "完了");

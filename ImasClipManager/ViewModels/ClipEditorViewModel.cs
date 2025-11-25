@@ -29,6 +29,7 @@ namespace ImasClipManager.ViewModels
 
     public partial class ClipEditorViewModel : ObservableObject
     {
+        private readonly ThumbnailService _thumbnailService;
         public Clip ClipData { get; private set; }
         public List<BrandSelection> BrandList { get; set; }
         public EditorMode Mode { get; private set; }
@@ -56,8 +57,9 @@ namespace ImasClipManager.ViewModels
             }
         }
 
-        public ClipEditorViewModel(Clip? clip, EditorMode mode, int spaceId)
+        public ClipEditorViewModel(Clip? clip, EditorMode mode, int spaceId, ThumbnailService thumbnailService)
         {
+            _thumbnailService = thumbnailService;
             Mode = mode;
 
             // モード設定
@@ -319,8 +321,6 @@ namespace ImasClipManager.ViewModels
 
             try
             {
-                var service = new ThumbnailService();
-
                 long targetTimeMs = 0;
                 // 動画全体の長さを取得して中央を計算
                 // (LoadVideoDurationAsyncで取得済みだが、念のため再取得あるいはキャッシュ利用)
@@ -340,7 +340,7 @@ namespace ImasClipManager.ViewModels
 
                 targetTimeMs = start + (end - start) / 2;
 
-                string thumbPath = await service.GenerateThumbnailAsync(ClipData.FilePath, targetTimeMs);
+                string thumbPath = await _thumbnailService.GenerateThumbnailAsync(ClipData.FilePath, targetTimeMs);
 
                 if (!string.IsNullOrEmpty(thumbPath))
                 {

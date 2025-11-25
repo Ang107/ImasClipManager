@@ -9,12 +9,12 @@ namespace ImasClipManager
 {
     public partial class MainWindow : Window
     {
-        public MainWindow()
+        public MainWindow(MainViewModel viewModel)
         {
             InitializeComponent();
             
             // ここでViewModelを画面にセットします
-            this.DataContext = new MainViewModel();
+            this.DataContext = viewModel;
         }
         // ▼ 修正: クリック位置が行(DataGridRow)内かチェックする
         private async void DataGrid_MouseDoubleClick(object sender, MouseButtonEventArgs e)
