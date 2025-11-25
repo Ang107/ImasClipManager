@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Xabe.FFmpeg;
 using Xabe.FFmpeg.Downloader;
+using System.Collections.Generic;
 
 namespace ImasClipManager.Services
 {
@@ -137,6 +138,66 @@ namespace ImasClipManager.Services
                 string outputPath = Path.Combine(_thumbnailFolder, fileName);
                 File.Copy(inputPath, outputPath, true);
                 return outputPath;
+            }
+        }
+
+        // ★追加: 使われていないサムネイルを削除する
+        // usedPaths: DBに保存されている全クリップのサムネイルパスのリスト
+        public async Task<int> CleanUpUnusedThumbnailsAsync(IEnumerable<string> usedPaths)
+        {
+            return await Task.Run(() =>
+            {
+                if (!Directory.Exists(_thumbnailFolder)) return 0;
+
+                // 1. 比較用にパスを正規化してHashSetにする (大文字小文字無視)
+                var usedSet = new HashSet<string>(
+                    usedPaths.Select(p => Path.GetFullPath(p)),
+                    StringComparer.OrdinalIgnoreCase
+                );
+
+                int deletedCount = 0;
+
+                // 2. フォルダ内の全jpg/pngファイルを取得
+                var files = Directory.GetFiles(_thumbnailFolder, "*.*")
+                                     .Where(f => f.EndsWith(".jpg", StringComparison.OrdinalIgnoreCase)
+                                              || f.EndsWith(".png", StringComparison.OrdinalIgnoreCase));
+
+                foreach (var file in files)
+                {
+                    var fullPath = Path.GetFullPath(file);
+
+                    // 3. DBに使われていないファイルなら削除
+                    if (!usedSet.Contains(fullPath))
+                    {
+                        try
+                        {
+                            File.Delete(fullPath);
+                            deletedCount++;
+                            Debug.WriteLine($"[CleanUp] Deleted: {fullPath}");
+                        }
+                        catch (Exception ex)
+                        {
+                            Debug.WriteLine($"[CleanUp] Failed to delete {fullPath}: {ex.Message}");
+                        }
+                    }
+                }
+
+                return deletedCount;
+            });
+        }
+
+        public void DeleteFile(string path)
+        {
+            try
+            {
+                if (File.Exists(path))
+                {
+                    File.Delete(path);
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Failed to delete file: {ex.Message}");
             }
         }
     }

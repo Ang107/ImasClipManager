@@ -22,6 +22,8 @@
                 <MenuItem Header="出演者データをインポート..." Command="{Binding ImportPerformersCommand}"/>
                 <MenuItem Header="出演者データをエクスポート..." Command="{Binding ExportPerformersCommand}"/>
                 <Separator/>
+                <MenuItem Header="サムネイルのクリーンアップ..." Command="{Binding CleanUpThumbnailsCommand}"/>
+                <Separator/>
                 <MenuItem Header="終了(_X)" Click="MenuItem_Exit_Click"/>
             </MenuItem>
         </Menu>

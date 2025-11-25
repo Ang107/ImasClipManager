@@ -191,6 +191,11 @@ namespace ImasClipManager.ViewModels
                     var target = await db.Clips.FindAsync(clip.Id);
                     if (target != null)
                     {
+                        if (!string.IsNullOrEmpty(target.ThumbnailPath))
+                        {
+                            var service = new ThumbnailService();
+                            service.DeleteFile(target.ThumbnailPath);
+                        }
                         db.Clips.Remove(target);
                         await db.SaveChangesAsync();
                     }
@@ -478,6 +483,37 @@ namespace ImasClipManager.ViewModels
                     MessageBox.Show($"インポートに失敗しました。\n{ex.Message}", "エラー", MessageBoxButton.OK, MessageBoxImage.Error);
                 }
             }
+        }
+
+        // --- メンテナンスコマンド ---
+
+        // ★追加: サムネイルのお掃除コマンド
+        [RelayCommand]
+        public async Task CleanUpThumbnails()
+        {
+            if (MessageBox.Show("使われていないサムネイル画像を検索して削除しますか？\n" +
+                                "※DBに登録されていない画像ファイルが対象です。",
+                                "クリーンアップ",
+                                MessageBoxButton.YesNo,
+                                MessageBoxImage.Question) != MessageBoxResult.Yes)
+            {
+                return;
+            }
+
+            int count = 0;
+            using (var db = new AppDbContext())
+            {
+                // 全クリップのサムネパスを取得
+                var allPaths = await db.Clips
+                                       .Where(c => c.ThumbnailPath != null && c.ThumbnailPath != "")
+                                       .Select(c => c.ThumbnailPath)
+                                       .ToListAsync();
+
+                var service = new ThumbnailService();
+                count = await service.CleanUpUnusedThumbnailsAsync(allPaths);
+            }
+
+            MessageBox.Show($"クリーンアップが完了しました。\n削除されたファイル: {count} 件", "完了");
         }
     }
 }
