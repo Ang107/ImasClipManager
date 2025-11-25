@@ -165,12 +165,11 @@ namespace ImasClipManager.ViewModels
                 var comparison = System.StringComparison.OrdinalIgnoreCase;
                 bool isMatch = false;
 
-                // 1. 文字列プロパティのチェック (曲名, 公演名, 歌詞, 備考, ファイルパス)
+                // 1. 文字列プロパティのチェック (曲名, 公演名, 歌詞, 備考)
                 if ((clip.SongTitle?.Contains(keyword, comparison) ?? false) ||
                     (clip.ConcertName?.Contains(keyword, comparison) ?? false) ||
                     (clip.Lyrics?.Contains(keyword, comparison) ?? false) ||
-                    (clip.Remarks?.Contains(keyword, comparison) ?? false) ||
-                    (clip.FilePath?.Contains(keyword, comparison) ?? false))
+                    (clip.Remarks?.Contains(keyword, comparison) ?? false))
                 {
                     isMatch = true;
                 }
