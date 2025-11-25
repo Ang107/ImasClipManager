@@ -302,6 +302,22 @@ namespace ImasClipManager.ViewModels
             }
         }
 
+        public async Task ImportThumbnailFromFileAsync(string filePath)
+        {
+            try
+            {
+                string newPath = await _thumbnailService.ImportThumbnailAsync(filePath);
+
+                // データの更新
+                ClipData.ThumbnailPath = newPath;
+                ClipData.IsAutoThumbnail = false;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"画像の取り込みに失敗しました: {ex.Message}", "エラー", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
         // サムネイル手動再生成
         [RelayCommand]
         public async Task RegenerateThumbnail()

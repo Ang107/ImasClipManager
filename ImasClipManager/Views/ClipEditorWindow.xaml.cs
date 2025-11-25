@@ -88,21 +88,11 @@ namespace ImasClipManager.Views
         {
             var dialog = new OpenFileDialog();
             dialog.Filter = "画像ファイル|*.jpg;*.png;*.bmp|すべてのファイル|*.*";
+
             if (dialog.ShowDialog() == true)
             {
-                try
-                {
-                    var service = new ThumbnailService();
-                    // 選択された画像をリサイズして取り込み
-                    string newPath = await service.ImportThumbnailAsync(dialog.FileName);
-
-                    _viewModel.ClipData.ThumbnailPath = newPath;
-                    _viewModel.ClipData.IsAutoThumbnail = false;
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.Show($"画像の取り込みに失敗しました: {ex.Message}", "エラー", MessageBoxButton.OK, MessageBoxImage.Error);
-                }
+                // ViewModelにお願いするだけにする
+                await _viewModel.ImportThumbnailFromFileAsync(dialog.FileName);
             }
         }
 
