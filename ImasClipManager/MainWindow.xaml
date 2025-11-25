@@ -126,8 +126,9 @@
                           GridLinesVisibility="All" 
                           HorizontalGridLinesBrush="LightGray" 
                           VerticalGridLinesBrush="LightGray"
-                          RowHeight="40"
-                          MouseDoubleClick="DataGrid_MouseDoubleClick">
+                          RowHeight="46"
+                          MouseDoubleClick="DataGrid_MouseDoubleClick"
+                          FontSize="13">
 
                     <DataGrid.RowStyle>
                         <Style TargetType="DataGridRow">
@@ -177,7 +178,21 @@
                         <DataGridTemplateColumn Header="サムネ" Width="0.8*">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
-                                    <Image Source="{Binding ThumbnailPath}" Height="35" Stretch="Uniform" HorizontalAlignment="Center"/>
+                                    <Grid HorizontalAlignment="Center" VerticalAlignment="Center">
+                                        <Image Source="{Binding ThumbnailPath}" Height="40" Stretch="Uniform"/>
+
+                                        <Border Background="#CC000000" 
+                                            VerticalAlignment="Bottom" 
+                                            HorizontalAlignment="Right" 
+                                            Margin="0,0,2,2" 
+                                            Padding="2,0" 
+                                            CornerRadius="1">
+                                            <TextBlock Text="{Binding DurationDisplayStr}" 
+                                               Foreground="White" 
+                                               FontSize="10"
+                                               FontWeight="Bold"/>
+                                        </Border>
+                                    </Grid>
                                 </DataTemplate>
                             </DataGridTemplateColumn.CellTemplate>
                         </DataGridTemplateColumn>

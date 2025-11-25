@@ -4,7 +4,8 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using ImasClipManager.Helpers;
-
+using CommunityToolkit.Mvvm.ComponentModel;
+using System.ComponentModel.DataAnnotations.Schema;
 namespace ImasClipManager.Models
 {
     [Flags]
@@ -74,6 +75,22 @@ namespace ImasClipManager.Models
                 }
             }
         }
+
+        private long _durationMs;
+        public long DurationMs
+        {
+            get => _durationMs;
+            set
+            {
+                if (SetProperty(ref _durationMs, value))
+                {
+                    OnPropertyChanged(nameof(DurationDisplayStr));
+                }
+            }
+        }
+
+        [NotMapped]
+        public string DurationDisplayStr => TimeHelper.FormatDuration(DurationMs);
 
         [NotMapped]
         public string PerformersSortKey

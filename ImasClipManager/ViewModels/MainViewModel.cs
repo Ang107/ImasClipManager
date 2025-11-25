@@ -99,8 +99,7 @@ namespace ImasClipManager.ViewModels
         {
             using (var db = new AppDbContext())
             {
-                //db.Database.EnsureDeleted();
-                await db.Database.EnsureCreatedAsync();
+                await db.Database.MigrateAsync();
                 var spaceList = await db.Spaces.OrderBy(s => s.Id).ToListAsync();
 
                 // スペースが1つもなければデフォルトを作成

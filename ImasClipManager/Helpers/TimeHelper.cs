@@ -30,5 +30,22 @@ namespace ImasClipManager.Helpers
 
             return false;
         }
+
+
+        // ★追加: ミリ秒を "hh:mm:ss" または "mm:ss" 形式に変換
+        public static string FormatDuration(long durationMs)
+        {
+            if (durationMs < 0) durationMs = 0;
+            var ts = TimeSpan.FromMilliseconds(durationMs);
+
+            if (ts.TotalHours >= 1)
+            {
+                return ts.ToString(@"hh\:mm\:ss");
+            }
+            else
+            {
+                return ts.ToString(@"mm\:ss");
+            }
+        }
     }
 }

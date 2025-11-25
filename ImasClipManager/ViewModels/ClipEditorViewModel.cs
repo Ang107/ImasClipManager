@@ -134,6 +134,35 @@ namespace ImasClipManager.ViewModels
                             .ToList();
         }
 
+        public void UpdateClipDuration()
+        {
+            long start = ClipData.StartTimeMs ?? 0;
+            long end;
+
+            // 終了時間が指定されているか？
+            if (ClipData.EndTimeMs.HasValue && ClipData.EndTimeMs > 0)
+            {
+                end = ClipData.EndTimeMs.Value;
+            }
+            else
+            {
+                // 未指定なら動画の最後まで
+                end = (long)_videoDurationMs;
+            }
+
+            // 動画自体の長さを超えないように補正
+            if (_videoDurationMs > 0 && end > _videoDurationMs)
+            {
+                end = (long)_videoDurationMs;
+            }
+
+            long duration = end - start;
+            if (duration < 0) duration = 0;
+
+            // モデルにセット (これで DurationDisplayStr も更新される)
+            ClipData.DurationMs = duration;
+        }
+
         // 初期化処理（ViewのLoadedなどで呼ぶ）
         public async Task InitializeAsync()
         {
@@ -151,15 +180,18 @@ namespace ImasClipManager.ViewModels
                 var mediaInfo = await FFmpeg.GetMediaInfo(ClipData.FilePath);
                 _videoDurationMs = mediaInfo.Duration.TotalMilliseconds;
                 ValidateTimes();
+                UpdateClipDuration();
             }
             catch
             {
                 _videoDurationMs = 0;
+                UpdateClipDuration();
             }
         }
 
         public bool ValidateTimes()
         {
+            UpdateClipDuration();
             bool isValid = true;
             long startMs = 0;
             long? endMs = null;
