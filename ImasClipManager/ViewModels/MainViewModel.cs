@@ -365,10 +365,25 @@ namespace ImasClipManager.ViewModels
                 if (existingClip != null)
                 {
                     db.Entry(existingClip).CurrentValues.SetValues(clip);
-                    existingClip.Performers.Clear();
 
+                    // 修正: Clear() -> Add() ではなく、差分更新を行う
+                    // これにより、既存のリレーションが誤って削除状態のままになるのを防ぐ
+
+                    var newPerformerIds = clip.Performers.Select(p => p.Id).ToHashSet();
+
+                    // 1. 削除対象: 既存リストにあり、新リストにないもの
+                    var toRemove = existingClip.Performers.Where(p => !newPerformerIds.Contains(p.Id)).ToList();
+                    foreach (var p in toRemove)
+                    {
+                        existingClip.Performers.Remove(p);
+                    }
+
+                    // 2. 追加対象: 新リストにあり、既存リストにないもの
                     foreach (var p in clip.Performers)
                     {
+                        // 既に存在する場合はスキップ(維持)
+                        if (existingClip.Performers.Any(existing => existing.Id == p.Id)) continue;
+
                         var trackedPerformer = db.Performers.Local.FirstOrDefault(x => x.Id == p.Id);
                         if (trackedPerformer != null)
                         {
