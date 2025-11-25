@@ -8,10 +8,12 @@ using System.ComponentModel;
 using ImasClipManager.Models;
 using ImasClipManager.Data;
 using ImasClipManager.Views;
+using ImasClipManager.Helpers;
 using Microsoft.EntityFrameworkCore; // Include用
 using Microsoft.Win32; // OpenFileDialog, SaveFileDialog用
 using ImasClipManager.Services; // 追加
 using System.Text; // 追加
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace ImasClipManager.ViewModels
@@ -40,6 +42,7 @@ namespace ImasClipManager.ViewModels
         }
 
         // --- 検索 ---
+        private CancellationTokenSource? _debounceCts;
         private string _searchText = string.Empty;
         public string SearchText
         {
@@ -48,8 +51,33 @@ namespace ImasClipManager.ViewModels
             {
                 if (SetProperty(ref _searchText, value))
                 {
-                    _clipsView.Refresh();
+                    SearchWithDebounce();
                 }
+            }
+        }
+
+        // デバウンス処理の実体
+        private async void SearchWithDebounce()
+        {
+            try
+            {
+                // 前回の待機処理があればキャンセル
+                _debounceCts?.Cancel();
+                _debounceCts = new CancellationTokenSource();
+                var token = _debounceCts.Token;
+
+                // 300ミリ秒待機 (入力中はここでキャンセルされるため後続処理が走らない)
+                await Task.Delay(300, token);
+
+                // UIスレッドでフィルタを更新
+                Application.Current.Dispatcher.Invoke(() =>
+                {
+                    _clipsView?.Refresh();
+                });
+            }
+            catch (TaskCanceledException)
+            {
+                // キャンセルされた場合は何もしない
             }
         }
 
@@ -127,18 +155,62 @@ namespace ImasClipManager.ViewModels
             if (item is not Clip clip) return false;
             if (string.IsNullOrWhiteSpace(SearchText)) return true;
 
+            // 空白区切りでキーワード分割 (全角スペースにも対応)
             var keywords = SearchText.Split(new[] { ' ', '　' }, System.StringSplitOptions.RemoveEmptyEntries);
+
+            // ★変更: すべてのキーワードが含まれているか (AND検索)
             foreach (var keyword in keywords)
             {
-                bool match = (clip.SongTitle?.Contains(keyword, System.StringComparison.OrdinalIgnoreCase) ?? false) ||
-                             (clip.ConcertName?.Contains(keyword, System.StringComparison.OrdinalIgnoreCase) ?? false) ||
-                             (clip.FilePath?.Contains(keyword, System.StringComparison.OrdinalIgnoreCase) ?? false) ||
-                             (clip.Remarks?.Contains(keyword, System.StringComparison.OrdinalIgnoreCase) ?? false) ||
-                             // ブランド名検索
-                             (clip.Brands.ToString().Contains(keyword, System.StringComparison.OrdinalIgnoreCase));
+                // 大文字小文字を区別しない比較
+                var comparison = System.StringComparison.OrdinalIgnoreCase;
+                bool isMatch = false;
 
-                if (!match) return false;
+                // 1. 文字列プロパティのチェック (曲名, 公演名, 歌詞, 備考, ファイルパス)
+                if ((clip.SongTitle?.Contains(keyword, comparison) ?? false) ||
+                    (clip.ConcertName?.Contains(keyword, comparison) ?? false) ||
+                    (clip.Lyrics?.Contains(keyword, comparison) ?? false) ||
+                    (clip.Remarks?.Contains(keyword, comparison) ?? false) ||
+                    (clip.FilePath?.Contains(keyword, comparison) ?? false))
+                {
+                    isMatch = true;
+                }
+
+                // 2. ライブ形式 (表示名文字列に含まれるか)
+                if (!isMatch)
+                {
+                    if (clip.LiveType.ToDisplayString().Contains(keyword, comparison))
+                    {
+                        isMatch = true;
+                    }
+                }
+
+                // 3. ブランド (表示名文字列に含まれるか)
+                if (!isMatch)
+                {
+                    // ToDisplayStringは改行区切りで結合されているので、Containsでチェック可能
+                    if (clip.Brands.ToDisplayString().Contains(keyword, comparison))
+                    {
+                        isMatch = true;
+                    }
+                }
+
+                // 4. 出演者 (名前 or 読み に含まれるか)
+                if (!isMatch && clip.Performers != null)
+                {
+                    // 紐づいている出演者の中に、条件にヒットする人が一人でもいればOK
+                    if (clip.Performers.Any(p =>
+                        (p.Name?.Contains(keyword, comparison) ?? false) ||
+                        (p.Yomi?.Contains(keyword, comparison) ?? false)))
+                    {
+                        isMatch = true;
+                    }
+                }
+
+                // もしこのキーワードがいずれの属性にも含まれていなければ、その時点でFalse (AND条件不成立)
+                if (!isMatch) return false;
             }
+
+            // 全てのキーワードが何らかの属性にヒットした
             return true;
         }
 
