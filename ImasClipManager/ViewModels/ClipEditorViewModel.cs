@@ -320,30 +320,25 @@ namespace ImasClipManager.ViewModels
             try
             {
                 var service = new ThumbnailService();
-                // await service.InitializeAsync(); // ThumbnailService内で呼ばれるので不要かもだが念のため
 
                 long targetTimeMs = 0;
-
-                if (ClipData.IsAutoThumbnail)
+                // 動画全体の長さを取得して中央を計算
+                // (LoadVideoDurationAsyncで取得済みだが、念のため再取得あるいはキャッシュ利用)
+                double totalDurationMs = _videoDurationMs;
+                if (totalDurationMs == 0)
                 {
-                    // 動画全体の長さを取得して中央を計算
-                    // (LoadVideoDurationAsyncで取得済みだが、念のため再取得あるいはキャッシュ利用)
-                    double totalDurationMs = _videoDurationMs;
-                    if (totalDurationMs == 0)
-                    {
-                        var info = await FFmpeg.GetMediaInfo(ClipData.FilePath);
-                        totalDurationMs = info.Duration.TotalMilliseconds;
-                    }
-
-                    long start = ClipData.StartTimeMs ?? 0;
-                    long end = ClipData.EndTimeMs ?? (long)totalDurationMs;
-
-                    if (start > totalDurationMs) start = 0;
-                    if (end > totalDurationMs) end = (long)totalDurationMs;
-                    if (end < start) end = start;
-
-                    targetTimeMs = start + (end - start) / 2;
+                    var info = await FFmpeg.GetMediaInfo(ClipData.FilePath);
+                    totalDurationMs = info.Duration.TotalMilliseconds;
                 }
+
+                long start = ClipData.StartTimeMs ?? 0;
+                long end = ClipData.EndTimeMs ?? (long)totalDurationMs;
+
+                if (start > totalDurationMs) start = 0;
+                if (end > totalDurationMs) end = (long)totalDurationMs;
+                if (end < start) end = start;
+
+                targetTimeMs = start + (end - start) / 2;
 
                 string thumbPath = await service.GenerateThumbnailAsync(ClipData.FilePath, targetTimeMs);
 
