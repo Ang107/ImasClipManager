@@ -16,7 +16,11 @@ namespace ImasClipManager.Services
 
         public ThumbnailService()
         {
-            _thumbnailFolder = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Thumbnails");
+            string appDataFolder = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                "ImasClipManager"
+            );
+            _thumbnailFolder = Path.Combine(appDataFolder, "Thumbnails");
             if (!Directory.Exists(_thumbnailFolder)) Directory.CreateDirectory(_thumbnailFolder);
         }
 
