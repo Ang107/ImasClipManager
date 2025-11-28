@@ -3,6 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="clr-namespace:ImasClipManager.ViewModels"
         xmlns:converters="clr-namespace:ImasClipManager.Converters"
+        xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
         Title="ImasClipManager" Height="1000" Width="1800" 
         WindowStartupLocation="CenterScreen"
         WindowState="Maximized">
@@ -49,58 +50,131 @@
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="*"/>
-                    <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
 
-                <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="5,10,0,10">
-                    <ToggleButton IsChecked="{Binding IsSpacePaneVisible}"
+                <Grid Grid.Row="0" Margin="5,10,5,10">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <ToggleButton Grid.Column="0" IsChecked="{Binding IsSpacePaneVisible}"
                                   Content="≡" FontSize="18" FontWeight="Bold"
-                                  Width="40" Height="30"
+                                  Width="30" Height="30"
                                   Background="Transparent" BorderThickness="0"/>
 
-                    <TextBlock Text="スペース一覧" FontWeight="Bold" FontSize="16" 
+                    <TextBlock Grid.Column="1" Text="スペース一覧" FontWeight="Bold" FontSize="16" 
                                VerticalAlignment="Center" Margin="10,0,0,0"
                                Visibility="{Binding IsSpacePaneVisible, Converter={StaticResource BoolToVis}}"/>
-                </StackPanel>
+
+                    <Button Grid.Column="2" Content="＋" 
+                            Command="{Binding AddSpaceCommand}"
+                            Width="30" Height="30" FontSize="18" FontWeight="Bold"
+                            Margin="5,0,0,0"
+                            Visibility="{Binding IsSpacePaneVisible, Converter={StaticResource BoolToVis}}"
+                            ToolTip="新しいスペースを追加">
+                        <Button.Resources>
+                            <Style TargetType="{x:Type Border}">
+                                <Setter Property="CornerRadius" Value="15"/>
+                            </Style>
+                        </Button.Resources>
+                    </Button>
+                </Grid>
 
                 <ListBox Grid.Row="1" 
-                         ItemsSource="{Binding Spaces}" 
-                         SelectedItem="{Binding SelectedSpace}"
-                         SelectionMode="Single"
-                         BorderThickness="0" Background="Transparent"
-                         Margin="5,0"
-                         Visibility="{Binding IsSpacePaneVisible, Converter={StaticResource BoolToVis}}">
+            x:Name="SpaceListBox"
+            ItemsSource="{Binding Spaces}" 
+            SelectedItem="{Binding SelectedSpace}"
+            SelectionMode="Single"
+            BorderThickness="0" Background="Transparent"
+            Margin="5,0"
+            Visibility="{Binding IsSpacePaneVisible, Converter={StaticResource BoolToVis}}"
+            ScrollViewer.HorizontalScrollBarVisibility="Disabled">
 
                     <ListBox.ItemContainerStyle>
                         <Style TargetType="ListBoxItem">
-                            <Setter Property="Padding" Value="10,8"/>
+                            <Setter Property="Padding" Value="0"/>
+                            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+
                             <Setter Property="FontSize" Value="14"/>
                             <Setter Property="Tag" Value="{Binding DataContext, RelativeSource={RelativeSource AncestorType=ListBox}}"/>
                             <Setter Property="ContextMenu">
                                 <Setter.Value>
                                     <ContextMenu>
                                         <MenuItem Header="名前を変更"
-                                                  Command="{Binding PlacementTarget.Tag.EditSpaceCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
-                                                  CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
+                                    Command="{Binding PlacementTarget.Tag.EditSpaceCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                    CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
                                         <MenuItem Header="削除" Foreground="Red"
-                                                  Command="{Binding PlacementTarget.Tag.DeleteSpaceCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
-                                                  CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
+                                    Command="{Binding PlacementTarget.Tag.DeleteSpaceCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                    CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
                                     </ContextMenu>
                                 </Setter.Value>
                             </Setter>
                         </Style>
                     </ListBox.ItemContainerStyle>
+
                     <ListBox.ItemTemplate>
                         <DataTemplate>
-                            <TextBlock Text="{Binding Name}"/>
+                            <Grid MinHeight="34">
+
+                                <TextBlock Text="{Binding Name}" 
+                            VerticalAlignment="Center"
+                            Padding="10,0">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Visibility" Value="Visible"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsEditing}" Value="True">
+                                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                    <TextBlock.InputBindings>
+                                        <MouseBinding MouseAction="LeftDoubleClick" 
+                                        Command="{Binding DataContext.EditSpaceCommand, RelativeSource={RelativeSource AncestorType=ListBox}}"
+                                        CommandParameter="{Binding}"/>
+                                    </TextBlock.InputBindings>
+                                </TextBlock>
+
+                                <TextBox Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}" 
+                            VerticalAlignment="Stretch"
+                            VerticalContentAlignment="Center"
+                            Padding="5,0"
+                            Margin="0"
+                            BorderThickness="1"
+                            BorderBrush="#0078D7"
+                            Loaded="SpaceNameTextBox_Loaded">
+                                    <TextBox.Style>
+                                        <Style TargetType="TextBox">
+                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsEditing}" Value="True">
+                                                    <Setter Property="Visibility" Value="Visible"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBox.Style>
+
+                                    <TextBox.InputBindings>
+                                        <KeyBinding Key="Enter" 
+                                    Command="{Binding DataContext.CommitSpaceEditCommand, RelativeSource={RelativeSource AncestorType=ListBox}}"
+                                    CommandParameter="{Binding}"/>
+                                    </TextBox.InputBindings>
+
+                                    <i:Interaction.Triggers>
+                                        <i:EventTrigger EventName="LostFocus">
+                                            <i:InvokeCommandAction Command="{Binding DataContext.EndSpaceEditCommand, RelativeSource={RelativeSource AncestorType=ListBox}}"
+                                                    CommandParameter="{Binding}"/>
+                                        </i:EventTrigger>
+                                    </i:Interaction.Triggers>
+                                </TextBox>
+                            </Grid>
                         </DataTemplate>
                     </ListBox.ItemTemplate>
                 </ListBox>
 
-                <Button Grid.Row="2" Content="+ スペース追加" 
-                        Command="{Binding AddSpaceCommand}"
-                        Margin="10" Padding="5" Height="35"
-                        Visibility="{Binding IsSpacePaneVisible, Converter={StaticResource BoolToVis}}"/>
             </Grid>
 
             <Grid Grid.Column="1" Margin="10">

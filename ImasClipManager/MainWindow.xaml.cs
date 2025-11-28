@@ -4,6 +4,8 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Collections.Specialized; // 追加
+using System.Windows.Threading; // 追加
 
 namespace ImasClipManager
 {
@@ -15,7 +17,34 @@ namespace ImasClipManager
             
             // ここでViewModelを画面にセットします
             this.DataContext = viewModel;
+            viewModel.Spaces.CollectionChanged += Spaces_CollectionChanged;
         }
+
+        // スペースが追加されたら自動的にスクロールする
+        private void Spaces_CollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
+        {
+            if (e.Action == NotifyCollectionChangedAction.Add && e.NewItems != null && e.NewItems.Count > 0)
+            {
+                var newItem = e.NewItems[0];
+                // UI描画を待ってからスクロール
+                Dispatcher.InvokeAsync(() =>
+                {
+                    SpaceListBox.ScrollIntoView(newItem);
+                    SpaceListBox.SelectedItem = newItem;
+                }, DispatcherPriority.Background);
+            }
+        }
+
+        // TextBoxが表示されたらフォーカスを当てて全選択する
+        private void SpaceNameTextBox_Loaded(object sender, RoutedEventArgs e)
+        {
+            if (sender is TextBox textBox)
+            {
+                textBox.Focus();
+                textBox.SelectAll();
+            }
+        }
+
         // ▼ 修正: クリック位置が行(DataGridRow)内かチェックする
         private async void DataGrid_MouseDoubleClick(object sender, MouseButtonEventArgs e)
         {

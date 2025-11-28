@@ -315,55 +315,114 @@ namespace ImasClipManager.ViewModels
             playerWindow.Show();
         }
 
-        // --- スペース操作コマンド ---
 
+        // --- スペース操作コマンド (刷新) ---
+
+        // 1. スペース追加 (＋ボタン)
         [RelayCommand]
-        public async Task AddSpace()
+        public void AddSpace()
         {
-            var input = new InputWindow("新しいスペース名:");
-
-            // バリデーションルールを設定 (空文字チェック)
-            input.Validator = (text) =>
-                string.IsNullOrWhiteSpace(text) ? "スペース名を入力してください。" : null;
-
-            // ShowDialog() が true で返ってくるのは、バリデーションを通過してOKが押された場合のみ
-            if (input.ShowDialog() == true)
+            var newSpace = new Space
             {
-                using (var db = _dbFactory())
-                {
-                    var newSpace = new Space { Name = input.InputText.Trim() };
-                    db.Spaces.Add(newSpace);
-                    await db.SaveChangesAsync();
-                }
-                await LoadSpacesAsync();
-                SelectedSpace = Spaces.LastOrDefault();
-            }
+                Name = "新規スペース", // 初期値
+                IsEditing = true,
+                IsNew = true,
+                OriginalName = "" // 新規なので空
+            };
+
+            Spaces.Add(newSpace);
+            SelectedSpace = newSpace;
+
+            // ※View側でCollectionChangedを検知してスクロールさせる
         }
 
+        // 2. スペース名変更 (ダブルクリック/メニュー)
         [RelayCommand]
-        public async Task EditSpace(Space space)
+        public void EditSpace(Space space)
         {
             if (space == null) return;
 
-            var input = new InputWindow("スペース名を変更:", space.Name);
+            // 編集モードに入る前に現在の名前を退避
+            space.OriginalName = space.Name;
+            space.IsNew = false;
+            space.IsEditing = true;
+        }
 
-            // バリデーションルールを設定
-            input.Validator = (text) =>
-                string.IsNullOrWhiteSpace(text) ? "スペース名は空にできません。" : null;
+        // 3. エンターキーでの確定試行
+        [RelayCommand]
+        public async Task CommitSpaceEdit(Space space)
+        {
+            if (space == null) return;
 
-            if (input.ShowDialog() == true)
+            // バリデーション: 空文字チェック
+            if (string.IsNullOrWhiteSpace(space.Name))
             {
-                using (var db = _dbFactory())
+                MessageBox.Show("スペース名を入力してください。", "入力エラー", MessageBoxButton.OK, MessageBoxImage.Warning);
+                // 編集継続 (IsEditing = true のまま)
+                return;
+            }
+
+            // 正常系: 保存
+            await SaveSpaceAsync(space);
+        }
+
+        // 4. フォーカスが外れたとき (編集終了またはキャンセル)
+        [RelayCommand]
+        public async Task EndSpaceEdit(Space space)
+        {
+            if (space == null || !space.IsEditing) return;
+
+            // 空文字の場合の処理
+            if (string.IsNullOrWhiteSpace(space.Name))
+            {
+                if (space.IsNew)
                 {
+                    // 新規作成で空文字なら削除 (作成キャンセル)
+                    Spaces.Remove(space);
+                }
+                else
+                {
+                    // 既存なら元の名前に戻す
+                    space.Name = space.OriginalName;
+                    space.IsEditing = false;
+                }
+                return;
+            }
+
+            // 入力がある場合は保存して終了
+            await SaveSpaceAsync(space);
+        }
+
+        // 保存の共通処理
+        private async Task SaveSpaceAsync(Space space)
+        {
+            using (var db = _dbFactory())
+            {
+                if (space.IsNew)
+                {
+                    space.Id = 0; // ID自動採番
+                    db.Spaces.Add(space);
+                }
+                else
+                {
+                    // 既存更新
                     var target = await db.Spaces.FindAsync(space.Id);
                     if (target != null)
                     {
-                        target.Name = input.InputText.Trim();
-                        await db.SaveChangesAsync();
+                        target.Name = space.Name;
                     }
                 }
-                await LoadSpacesAsync();
+                await db.SaveChangesAsync();
             }
+
+            // フラグをリセット
+            space.IsNew = false;
+            space.IsEditing = false;
+            space.OriginalName = string.Empty;
+
+            // リスト再読み込みはせず、IDだけ同期できればベストだが、
+            // 簡易的に再ロードするか、そのまま利用する
+            if (space.Id == 0) await LoadSpacesAsync();
         }
 
         [RelayCommand]
