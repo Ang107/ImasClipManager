@@ -4,6 +4,7 @@
         xmlns:vm="clr-namespace:ImasClipManager.ViewModels"
         xmlns:converters="clr-namespace:ImasClipManager.Converters"
         xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
+        xmlns:helpers="clr-namespace:ImasClipManager.Helpers"
         Title="ImasClipManager" Height="1000" Width="1800" 
         WindowStartupLocation="CenterScreen"
         WindowState="Maximized">
@@ -11,6 +12,7 @@
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVis"/>
         <converters:DoubleToGridLengthConverter x:Key="DoubleToGridLengthConv"/>
+        <helpers:BindingProxy x:Key="Proxy" Data="{Binding}"/>
     </Window.Resources>
 
     <Grid>
@@ -27,6 +29,43 @@
                 <MenuItem Header="サムネイルのクリーンアップ..." Command="{Binding CleanUpThumbnailsCommand}"/>
                 <Separator/>
                 <MenuItem Header="終了(_X)" Click="MenuItem_Exit_Click"/>
+            </MenuItem>
+            <MenuItem Header="表示(_V)">
+                <MenuItem Header="表に表示する項目">
+                    <MenuItem Header="サムネイル" IsCheckable="True" IsChecked="{Binding Settings.Table_Thumbnail}"/>
+                    <MenuItem Header="動画ファイルパス" IsCheckable="True" IsChecked="{Binding Settings.Table_FilePath}"/>
+                    <MenuItem Header="再生開始" IsCheckable="True" IsChecked="{Binding Settings.Table_StartTime}"/>
+                    <MenuItem Header="再生終了" IsCheckable="True" IsChecked="{Binding Settings.Table_EndTime}"/>
+                    <MenuItem Header="曲名" IsCheckable="True" IsChecked="{Binding Settings.Table_SongTitle}"/>
+                    <MenuItem Header="公演名" IsCheckable="True" IsChecked="{Binding Settings.Table_ConcertName}"/>
+                    <MenuItem Header="公演日" IsCheckable="True" IsChecked="{Binding Settings.Table_ConcertDate}"/>
+                    <MenuItem Header="形式" IsCheckable="True" IsChecked="{Binding Settings.Table_LiveType}"/>
+                    <MenuItem Header="ブランド" IsCheckable="True" IsChecked="{Binding Settings.Table_Brands}"/>
+                    <MenuItem Header="出演者" IsCheckable="True" IsChecked="{Binding Settings.Table_Performers}"/>
+                    <MenuItem Header="歌詞" IsCheckable="True" IsChecked="{Binding Settings.Table_Lyrics}"/>
+                    <MenuItem Header="備考" IsCheckable="True" IsChecked="{Binding Settings.Table_Remarks}"/>
+                    <MenuItem Header="再生数" IsCheckable="True" IsChecked="{Binding Settings.Table_PlayCount}"/>
+                    <MenuItem Header="登録日時" IsCheckable="True" IsChecked="{Binding Settings.Table_CreatedAt}"/>
+                    <MenuItem Header="更新日時" IsCheckable="True" IsChecked="{Binding Settings.Table_UpdatedAt}"/>
+                </MenuItem>
+
+                <MenuItem Header="詳細画面に表示する項目">
+                    <MenuItem Header="サムネイル設定" IsCheckable="True" IsChecked="{Binding Settings.Editor_Thumbnail}"/>
+                    <MenuItem Header="動画ファイルパス" IsCheckable="True" IsChecked="{Binding Settings.Editor_FilePath}"/>
+                    <MenuItem Header="再生開始" IsCheckable="True" IsChecked="{Binding Settings.Editor_StartTime}"/>
+                    <MenuItem Header="再生終了" IsCheckable="True" IsChecked="{Binding Settings.Editor_EndTime}"/>
+                    <MenuItem Header="曲名" IsCheckable="True" IsChecked="{Binding Settings.Editor_SongTitle}"/>
+                    <MenuItem Header="公演名" IsCheckable="True" IsChecked="{Binding Settings.Editor_ConcertName}"/>
+                    <MenuItem Header="公演日" IsCheckable="True" IsChecked="{Binding Settings.Editor_ConcertDate}"/>
+                    <MenuItem Header="形式" IsCheckable="True" IsChecked="{Binding Settings.Editor_LiveType}"/>
+                    <MenuItem Header="ブランド" IsCheckable="True" IsChecked="{Binding Settings.Editor_Brands}"/>
+                    <MenuItem Header="出演者" IsCheckable="True" IsChecked="{Binding Settings.Editor_Performers}"/>
+                    <MenuItem Header="歌詞" IsCheckable="True" IsChecked="{Binding Settings.Editor_Lyrics}"/>
+                    <MenuItem Header="備考" IsCheckable="True" IsChecked="{Binding Settings.Editor_Remarks}"/>
+                    <MenuItem Header="再生数" IsCheckable="True" IsChecked="{Binding Settings.Editor_PlayCount}"/>
+                    <MenuItem Header="登録日時" IsCheckable="True" IsChecked="{Binding Settings.Editor_CreatedAt}"/>
+                    <MenuItem Header="更新日時" IsCheckable="True" IsChecked="{Binding Settings.Editor_UpdatedAt}"/>
+                </MenuItem>
             </MenuItem>
         </Menu>
 
@@ -267,7 +306,7 @@
                     </DataGrid.Resources>
 
                     <DataGrid.Columns>
-                        <DataGridTemplateColumn Header="サムネ" Width="0.8*">
+                        <DataGridTemplateColumn Header="サムネ" Width="0.8*" Visibility="{Binding Data.Settings.Table_Thumbnail, Source={StaticResource Proxy}, Converter={StaticResource BoolToVis}}">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
                                     <Grid HorizontalAlignment="Center" VerticalAlignment="Center">
@@ -300,14 +339,31 @@
                                 </DataTemplate>
                             </DataGridTemplateColumn.CellTemplate>
                         </DataGridTemplateColumn>
+                        <DataGridTextColumn Header="動画ファイルパス" 
+                                    Binding="{Binding FilePath}" 
+                                    Width="1.5*" 
+                                    ElementStyle="{StaticResource LeftTextStyle}"
+                                    Visibility="{Binding Data.Settings.Table_FilePath, Source={StaticResource Proxy}, Converter={StaticResource BoolToVis}}"/>
 
-                        <DataGridTextColumn Header="曲名" Binding="{Binding SongTitle}" Width="1.5*" ElementStyle="{StaticResource CenterTextStyle}"/>
-                        <DataGridTextColumn Header="公演名" Binding="{Binding ConcertName}" Width="1.5*" ElementStyle="{StaticResource CenterTextStyle}"/>
-                        <DataGridTextColumn Header="公演日" Binding="{Binding ConcertDate, StringFormat=yyyy/MM/dd}" Width="0.8*" ElementStyle="{StaticResource CenterTextStyle}"/>
-                        <DataGridTextColumn Header="形式" Binding="{Binding LiveType, Converter={StaticResource LiveTypeConv}}" Width="0.6*" ElementStyle="{StaticResource CenterTextStyle}"/>
+                        <DataGridTextColumn Header="再生開始" 
+                                    Binding="{Binding StartTimeStr}" 
+                                    Width="0.9*" 
+                                    ElementStyle="{StaticResource CenterTextStyle}"
+                                    Visibility="{Binding Data.Settings.Table_StartTime, Source={StaticResource Proxy}, Converter={StaticResource BoolToVis}}"/>
+
+                        <DataGridTextColumn Header="再生終了" 
+                                    Binding="{Binding EndTimeStr}" 
+                                    Width="0.9*" 
+                                    ElementStyle="{StaticResource CenterTextStyle}"
+                                    Visibility="{Binding Data.Settings.Table_EndTime, Source={StaticResource Proxy}, Converter={StaticResource BoolToVis}}"/>
+                        <DataGridTextColumn Header="曲名" Binding="{Binding SongTitle}" Width="1.5*" ElementStyle="{StaticResource CenterTextStyle}" Visibility="{Binding Data.Settings.Table_SongTitle, Source={StaticResource Proxy}, Converter={StaticResource BoolToVis}}"/>
+                        <DataGridTextColumn Header="公演名" Binding="{Binding ConcertName}" Width="1.5*" ElementStyle="{StaticResource CenterTextStyle}" Visibility="{Binding Data.Settings.Table_ConcertName, Source={StaticResource Proxy}, Converter={StaticResource BoolToVis}}"/>
+                        <DataGridTextColumn Header="公演日" Binding="{Binding ConcertDate, StringFormat=yyyy/MM/dd}" Width="0.8*" ElementStyle="{StaticResource CenterTextStyle}" Visibility="{Binding Data.Settings.Table_ConcertDate, Source={StaticResource Proxy}, Converter={StaticResource BoolToVis}}"/>
+                        <DataGridTextColumn Header="形式" Binding="{Binding LiveType, Converter={StaticResource LiveTypeConv}}" Width="0.6*" ElementStyle="{StaticResource CenterTextStyle}" Visibility="{Binding Data.Settings.Table_LiveType, Source={StaticResource Proxy}, Converter={StaticResource BoolToVis}}"/>
                         <DataGridTemplateColumn Header="ブランド"
                             Width="1.2*"
-                            SortMemberPath="Brands">
+                            SortMemberPath="Brands"
+                            Visibility="{Binding Data.Settings.Table_Brands, Source={StaticResource Proxy}, Converter={StaticResource BoolToVis}}">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
                                     <ScrollViewer VerticalScrollBarVisibility="Auto"
@@ -322,7 +378,8 @@
                         </DataGridTemplateColumn>
                         <DataGridTemplateColumn Header="出演者"
                             Width="1.5*"
-                            SortMemberPath="PerformersSortKey">
+                            SortMemberPath="PerformersSortKey"
+                            Visibility="{Binding Data.Settings.Table_Performers, Source={StaticResource Proxy}, Converter={StaticResource BoolToVis}}">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
                                     <ScrollViewer VerticalScrollBarVisibility="Auto"
@@ -337,7 +394,8 @@
                         </DataGridTemplateColumn>
                         <DataGridTemplateColumn Header="歌詞"
                             Width="2*"
-                            SortMemberPath="Lyrics">
+                            SortMemberPath="Lyrics"
+                            Visibility="{Binding Data.Settings.Table_Lyrics, Source={StaticResource Proxy}, Converter={StaticResource BoolToVis}}">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
                                     <ScrollViewer VerticalScrollBarVisibility="Auto"
@@ -352,7 +410,8 @@
                         </DataGridTemplateColumn>
                         <DataGridTemplateColumn Header="備考"
                             Width="1.5*"
-                            SortMemberPath="Remarks">
+                            SortMemberPath="Remarks"
+                            Visibility="{Binding Data.Settings.Table_Remarks, Source={StaticResource Proxy}, Converter={StaticResource BoolToVis}}">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
                                     <ScrollViewer VerticalScrollBarVisibility="Auto"
@@ -365,8 +424,8 @@
                                 </DataTemplate>
                             </DataGridTemplateColumn.CellTemplate>
                         </DataGridTemplateColumn>
-                        <DataGridTextColumn Header="再生数" Binding="{Binding PlayCount}" Width="0.5*" ElementStyle="{StaticResource CenterTextStyle}"/>
-                        <DataGridTemplateColumn Header="登録日" Width="0.9*" SortMemberPath="CreatedAt">
+                        <DataGridTextColumn Header="再生数" Binding="{Binding PlayCount}" Width="0.5*" ElementStyle="{StaticResource CenterTextStyle}" Visibility="{Binding Data.Settings.Table_PlayCount, Source={StaticResource Proxy}, Converter={StaticResource BoolToVis}}"/>
+                        <DataGridTemplateColumn Header="登録日時" Width="0.9*" SortMemberPath="CreatedAt" Visibility="{Binding Data.Settings.Table_CreatedAt, Source={StaticResource Proxy}, Converter={StaticResource BoolToVis}}">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
                                     <StackPanel VerticalAlignment="Center">
@@ -377,7 +436,7 @@
                             </DataGridTemplateColumn.CellTemplate>
                         </DataGridTemplateColumn>
 
-                        <DataGridTemplateColumn Header="更新日" Width="0.9*" SortMemberPath="UpdatedAt">
+                        <DataGridTemplateColumn Header="更新日時" Width="0.9*" SortMemberPath="UpdatedAt" Visibility="{Binding Data.Settings.Table_UpdatedAt, Source={StaticResource Proxy}, Converter={StaticResource BoolToVis}}">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
                                     <StackPanel VerticalAlignment="Center">

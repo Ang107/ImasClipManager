@@ -56,10 +56,12 @@ namespace ImasClipManager.ViewModels
                 return string.Join(Environment.NewLine, ClipData.Performers.Select(p => p.Name));
             }
         }
+        public SettingsViewModel Settings { get; }
 
-        public ClipEditorViewModel(Clip? clip, EditorMode mode, int spaceId, ThumbnailService thumbnailService)
+        public ClipEditorViewModel(Clip? clip, EditorMode mode, int spaceId, ThumbnailService thumbnailService, SettingsViewModel settings)
         {
             _thumbnailService = thumbnailService;
+            Settings = settings;
             Mode = mode;
 
             // モード設定

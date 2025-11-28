@@ -170,12 +170,13 @@ namespace ImasClipManager.ViewModels
                 // キャンセルされた場合は何もしない
             }
         }
-
+        public SettingsViewModel Settings { get; }
         public MainViewModel(Func<AppDbContext> dbFactory, ThumbnailService thumbnailService, CsvDataService csvDataService)
         {
             _dbFactory = dbFactory;
             _thumbnailService = thumbnailService;
             _csvDataService = csvDataService;
+            Settings = new SettingsViewModel(_dbFactory);
             // クリップのフィルタ設定
             _clipsView = CollectionViewSource.GetDefaultView(Clips);
             _clipsView.Filter = FilterClips;
@@ -186,6 +187,7 @@ namespace ImasClipManager.ViewModels
         private async Task InitializeAsync()
         {
             await LoadSpacesAsync();
+            await Settings.InitializeAsync(); // 設定ロード
         }
 
         // --- データ読み込みロジック ---
@@ -318,7 +320,7 @@ namespace ImasClipManager.ViewModels
             }
 
             // ViewModelを作成してWindowに渡す
-            var vm = new ClipEditorViewModel(null, EditorMode.Add, SelectedSpace.Id, _thumbnailService);
+            var vm = new ClipEditorViewModel(null, EditorMode.Add, SelectedSpace.Id, _thumbnailService, Settings);
             var window = new ClipEditorWindow(vm);
 
             if (window.ShowDialog() == true)
@@ -334,7 +336,7 @@ namespace ImasClipManager.ViewModels
         {
             if (clip == null) return;
 
-            var vm = new ClipEditorViewModel(clip, EditorMode.Edit, clip.SpaceId, _thumbnailService);
+            var vm = new ClipEditorViewModel(clip, EditorMode.Edit, clip.SpaceId, _thumbnailService, Settings);
             var window = new ClipEditorWindow(vm);
 
             if (window.ShowDialog() == true)
@@ -372,7 +374,7 @@ namespace ImasClipManager.ViewModels
         {
             if (clip == null) return;
 
-            var vm = new ClipEditorViewModel(clip, EditorMode.Detail, clip.SpaceId, _thumbnailService);
+            var vm = new ClipEditorViewModel(clip, EditorMode.Detail, clip.SpaceId, _thumbnailService, Settings);
             var window = new ClipEditorWindow(vm);
             window.ShowDialog();
         }

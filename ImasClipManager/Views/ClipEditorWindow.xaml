@@ -12,6 +12,7 @@
                 <x:Type TypeName="models:LiveType"/>
             </ObjectDataProvider.MethodParameters>
         </ObjectDataProvider>
+        <BooleanToVisibilityConverter x:Key="BoolToVis"/>
     </Window.Resources>
 
     <Grid>
@@ -23,7 +24,7 @@
         <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto">
             <StackPanel Margin="15">
 
-                <Grid Margin="0,0,0,15" Background="#F5F5F5">
+                <Grid Margin="0,0,0,15" Background="#F5F5F5" Visibility="{Binding Settings.Editor_Thumbnail, Converter={StaticResource BoolToVis}}">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto"/>
                         <ColumnDefinition Width="103*"/>
@@ -70,101 +71,124 @@
                     </StackPanel>
                 </Grid>
 
-                <TextBlock Text="動画ファイルパス *:" FontWeight="Bold"/>
-                <Grid Margin="0,5,0,2">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="Auto"/>
-                    </Grid.ColumnDefinitions>
-                    <TextBox x:Name="FilePathBox" Text="{Binding ClipData.FilePath}" 
-                          VerticalContentAlignment="Center" IsEnabled="{Binding IsEditable}"/>
-                    <Button Grid.Column="1" Content="..." Width="30" Margin="5,0,0,0" 
-                            Click="SelectFile_Click" IsEnabled="{Binding IsEditable}"/>
-                </Grid>
+                <StackPanel Visibility="{Binding Settings.Editor_FilePath, Converter={StaticResource BoolToVis}}">
+                    <TextBlock Text="動画ファイルパス *:" FontWeight="Bold"/>
+                    <Grid Margin="0,5,0,2">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBox x:Name="FilePathBox" Text="{Binding ClipData.FilePath}" 
+                              VerticalContentAlignment="Center" IsEnabled="{Binding IsEditable}"/>
+                        <Button Grid.Column="1" Content="..." Width="30" Margin="5,0,0,0" 
+                                Click="SelectFile_Click" IsEnabled="{Binding IsEditable}"/>
+                    </Grid>
+                </StackPanel>
                 <TextBlock Text="{Binding FilePathErrorMessage}" Foreground="Red" FontWeight="Bold" Margin="0,0,0,15"/>
 
                 <Grid Margin="0,0,0,15">
+                    <Grid.Style>
+                        <Style TargetType="Grid">
+                            <Setter Property="Visibility" Value="Visible"/>
+                            <Style.Triggers>
+                                <MultiDataTrigger>
+                                    <MultiDataTrigger.Conditions>
+                                        <Condition Binding="{Binding Settings.Editor_StartTime}" Value="False"/>
+                                        <Condition Binding="{Binding Settings.Editor_EndTime}" Value="False"/>
+                                    </MultiDataTrigger.Conditions>
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                </MultiDataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Grid.Style>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="10"/>
                         <ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
+                    <StackPanel Grid.Column="0" Visibility="{Binding Settings.Editor_StartTime, Converter={StaticResource BoolToVis}}">
 
-                    <StackPanel Grid.Column="0">
-                        <TextBlock Text="再生開始:" FontWeight="Bold" FontSize="11"/>
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Text="再生開始:" FontWeight="Bold" FontSize="11"/>
 
-                        <Grid Margin="0,5,0,0">
-                            <TextBox x:Name="StartTimeBox" 
-                                     Text="{Binding ClipData.StartTimeStr, UpdateSourceTrigger=LostFocus}" 
-                                     IsEnabled="{Binding IsEditable}" 
-                                     LostFocus="Time_LostFocus"
-                                     VerticalContentAlignment="Center"
-                                     Background="Transparent"/>
+                            <Grid Margin="0,5,0,0">
+                                <TextBox x:Name="StartTimeBox" 
+                                         Text="{Binding ClipData.StartTimeStr, UpdateSourceTrigger=LostFocus}" 
+                                         IsEnabled="{Binding IsEditable}" 
+                                         LostFocus="Time_LostFocus"
+                                         VerticalContentAlignment="Center"
+                                         Background="Transparent"/>
 
-                            <TextBlock Text="例: 10:00, 1:23:45 (空欄で最初から)" 
-                                       Foreground="Gray" Opacity="0.5"
-                                       IsHitTestVisible="False" 
-                                       VerticalAlignment="Center" Margin="5,0,0,0">
-                                <TextBlock.Style>
-                                    <Style TargetType="TextBlock">
-                                        <Setter Property="Visibility" Value="Collapsed"/>
-                                        <Style.Triggers>
-                                            <DataTrigger Binding="{Binding Text, ElementName=StartTimeBox}" Value="">
-                                                <Setter Property="Visibility" Value="Visible"/>
-                                            </DataTrigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </TextBlock.Style>
-                            </TextBlock>
-                        </Grid>
-                        <TextBlock Text="{Binding StartTimeErrorMessage}" Foreground="Red" FontSize="11" TextWrapping="Wrap" Margin="0,2,0,0"/>
+                                <TextBlock Text="例: 10:00, 1:23:45 (空欄で最初から)" 
+                                           Foreground="Gray" Opacity="0.5"
+                                           IsHitTestVisible="False" 
+                                           VerticalAlignment="Center" Margin="5,0,0,0">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding Text, ElementName=StartTimeBox}" Value="">
+                                                    <Setter Property="Visibility" Value="Visible"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                            </Grid>
+                            <TextBlock Text="{Binding StartTimeErrorMessage}" Foreground="Red" FontSize="11" TextWrapping="Wrap" Margin="0,2,0,0"/>
+                        </StackPanel>
                     </StackPanel>
+                    <StackPanel Grid.Column="2" Visibility="{Binding Settings.Editor_EndTime, Converter={StaticResource BoolToVis}}">
+                        <StackPanel Grid.Column="2">
+                            <TextBlock Text="再生終了 (mm:ss / hh:mm:ss):" FontWeight="Bold" FontSize="11"/>
 
-                    <StackPanel Grid.Column="2">
-                        <TextBlock Text="再生終了 (mm:ss / hh:mm:ss):" FontWeight="Bold" FontSize="11"/>
+                            <Grid Margin="0,5,0,0">
+                                <TextBox x:Name="EndTimeBox" 
+                                         Text="{Binding ClipData.EndTimeStr, UpdateSourceTrigger=LostFocus}" 
+                                         IsEnabled="{Binding IsEditable}" 
+                                         LostFocus="Time_LostFocus"
+                                         VerticalContentAlignment="Center"
+                                         Background="Transparent"/>
 
-                        <Grid Margin="0,5,0,0">
-                            <TextBox x:Name="EndTimeBox" 
-                                     Text="{Binding ClipData.EndTimeStr, UpdateSourceTrigger=LostFocus}" 
-                                     IsEnabled="{Binding IsEditable}" 
-                                     LostFocus="Time_LostFocus"
-                                     VerticalContentAlignment="Center"
-                                     Background="Transparent"/>
+                                <TextBlock Text="例: 10:00, 1:23:45 (空欄で最後まで)" 
+                                           Foreground="Gray" Opacity="0.5"
+                                           IsHitTestVisible="False" 
+                                           VerticalAlignment="Center" Margin="5,0,0,0">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding Text, ElementName=EndTimeBox}" Value="">
+                                                    <Setter Property="Visibility" Value="Visible"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                            </Grid>
 
-                            <TextBlock Text="例: 10:00, 1:23:45 (空欄で最後まで)" 
-                                       Foreground="Gray" Opacity="0.5"
-                                       IsHitTestVisible="False" 
-                                       VerticalAlignment="Center" Margin="5,0,0,0">
-                                <TextBlock.Style>
-                                    <Style TargetType="TextBlock">
-                                        <Setter Property="Visibility" Value="Collapsed"/>
-                                        <Style.Triggers>
-                                            <DataTrigger Binding="{Binding Text, ElementName=EndTimeBox}" Value="">
-                                                <Setter Property="Visibility" Value="Visible"/>
-                                            </DataTrigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </TextBlock.Style>
-                            </TextBlock>
-                        </Grid>
-
-                        <TextBlock Text="{Binding EndTimeErrorMessage}" Foreground="Red" FontSize="11" TextWrapping="Wrap" Margin="0,2,0,0"/>
+                            <TextBlock Text="{Binding EndTimeErrorMessage}" Foreground="Red" FontSize="11" TextWrapping="Wrap" Margin="0,2,0,0"/>
+                        </StackPanel>
                     </StackPanel>
                 </Grid>
 
-                <TextBlock Text="曲名:" FontWeight="Bold"/>
-                <TextBox Text="{Binding ClipData.SongTitle}" Margin="0,5,0,15" IsEnabled="{Binding IsEditable}"/>
+                <StackPanel Visibility="{Binding Settings.Editor_SongTitle, Converter={StaticResource BoolToVis}}">
+                    <TextBlock Text="曲名:" FontWeight="Bold"/>
+                    <TextBox Text="{Binding ClipData.SongTitle}" Margin="0,5,0,15" IsEnabled="{Binding IsEditable}"/>
+                </StackPanel>
 
-                <TextBlock Text="公演名:" FontWeight="Bold"/>
-                <TextBox Text="{Binding ClipData.ConcertName}" Margin="0,5,0,15" IsEnabled="{Binding IsEditable}"/>
-
+                <StackPanel Visibility="{Binding Settings.Editor_Remarks, Converter={StaticResource BoolToVis}}">
+                    <TextBlock Text="公演名:" FontWeight="Bold"/>
+                    <TextBox Text="{Binding ClipData.ConcertName}" Margin="0,5,0,15" IsEnabled="{Binding IsEditable}"/>
+                </StackPanel>
                 <Grid Margin="0,0,0,15">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="10"/>
                         <ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
-                    <StackPanel Grid.Column="0">
+
+                    <StackPanel Grid.Column="0" Visibility="{Binding Settings.Editor_ConcertDate, Converter={StaticResource BoolToVis}}">
                         <TextBlock Text="公演日 (例: 2025/01/01):" FontWeight="Bold"/>
 
                         <DatePicker x:Name="ConcertDateBox" 
@@ -173,7 +197,7 @@
                                     VerticalContentAlignment="Center"
                                     Margin="0,5,0,0"/>
                     </StackPanel>
-                    <StackPanel Grid.Column="2">
+                    <StackPanel Grid.Column="2" Visibility="{Binding Settings.Editor_LiveType, Converter={StaticResource BoolToVis}}">
                         <TextBlock Text="ライブ形式:" FontWeight="Bold"/>
                         <ComboBox ItemsSource="{Binding Source={StaticResource LiveTypeEnum}}" 
                                   SelectedItem="{Binding ClipData.LiveType}" 
@@ -186,47 +210,96 @@
                         </ComboBox>
                     </StackPanel>
                 </Grid>
-
-                <TextBlock Text="ブランド:" FontWeight="Bold"/>
-                <Border BorderBrush="Gray" BorderThickness="1" Margin="0,5,0,15" Padding="5">
-                    <ItemsControl ItemsSource="{Binding BrandList}">
-                        <ItemsControl.ItemsPanel>
-                            <ItemsPanelTemplate>
-                                <WrapPanel Orientation="Horizontal"/>
-                            </ItemsPanelTemplate>
-                        </ItemsControl.ItemsPanel>
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate>
-                                <CheckBox Content="{Binding Name}" IsChecked="{Binding IsSelected}" 
+                <StackPanel Visibility="{Binding Settings.Editor_Brands, Converter={StaticResource BoolToVis}}">
+                    <TextBlock Text="ブランド:" FontWeight="Bold"/>
+                    <Border BorderBrush="Gray" BorderThickness="1" Margin="0,5,0,15" Padding="5">
+                        <ItemsControl ItemsSource="{Binding BrandList}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <WrapPanel Orientation="Horizontal"/>
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <CheckBox Content="{Binding Name}" IsChecked="{Binding IsSelected}" 
                                           IsEnabled="{Binding IsEnabled}" Margin="0,0,15,5"/>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
-                </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </Border>
+                </StackPanel>
+                <StackPanel Visibility="{Binding Settings.Editor_Performers, Converter={StaticResource BoolToVis}}">
+                    <StackPanel Orientation="Horizontal" Margin="0,15,0,5">
+                        <TextBlock Text="出演者:" FontWeight="Bold" VerticalAlignment="Center"/>
+                        <Button Content="選択..." Width="60" Margin="10,0,0,0" 
+                                Click="SelectPerformers_Click" IsEnabled="{Binding IsEditable}" 
+                                VerticalAlignment="Center" Height="22"/>
+                    </StackPanel>
 
-                <StackPanel Orientation="Horizontal" Margin="0,15,0,5">
-                    <TextBlock Text="出演者:" FontWeight="Bold" VerticalAlignment="Center"/>
-                    <Button Content="選択..." Width="60" Margin="10,0,0,0" 
-                            Click="SelectPerformers_Click" IsEnabled="{Binding IsEditable}" 
-                            VerticalAlignment="Center" Height="22"/>
+                    <TextBox Text="{Binding PerformersDisplayText, Mode=OneWay}"
+                             IsReadOnly="True" VerticalContentAlignment="Top" 
+                             MinHeight="50" Height="Auto" MaxHeight="200"
+                             TextWrapping="Wrap" AcceptsReturn="True"
+                             VerticalScrollBarVisibility="Auto"
+                             Margin="0,0,0,15" Background="#F0F0F0"/>
                 </StackPanel>
 
-                <TextBox Text="{Binding PerformersDisplayText, Mode=OneWay}"
-                         IsReadOnly="True" VerticalContentAlignment="Top" 
-                         MinHeight="50" Height="Auto" MaxHeight="200"
-                         TextWrapping="Wrap" AcceptsReturn="True"
-                         VerticalScrollBarVisibility="Auto"
-                         Margin="0,0,0,15" Background="#F0F0F0"/>
-
-                <TextBlock Text="歌詞:" FontWeight="Bold"/>
-                <TextBox Text="{Binding ClipData.Lyrics}" MinHeight="60" Height="Auto" MaxHeight="300"
+                <StackPanel Visibility="{Binding Settings.Editor_Lyrics, Converter={StaticResource BoolToVis}}">
+                    <TextBlock Text="歌詞:" FontWeight="Bold"/>
+                    <TextBox Text="{Binding ClipData.Lyrics}" MinHeight="60" Height="Auto" MaxHeight="300"
                          AcceptsReturn="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" 
                          Margin="0,5,0,15" IsEnabled="{Binding IsEditable}"/>
+                </StackPanel>
 
-                <TextBlock Text="備考:" FontWeight="Bold"/>
-                <TextBox Text="{Binding ClipData.Remarks}" MinHeight="60" Height="Auto" MaxHeight="300"
+                <StackPanel Visibility="{Binding Settings.Editor_Remarks, Converter={StaticResource BoolToVis}}">
+                    <TextBlock Text="備考:" FontWeight="Bold"/>
+                    <TextBox Text="{Binding ClipData.Remarks}" MinHeight="60" Height="Auto" MaxHeight="300"
                          AcceptsReturn="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" 
-                         Margin="0,5,0,0" IsEnabled="{Binding IsEditable}"/>
+                         Margin="0,5,0,15" IsEnabled="{Binding IsEditable}"/>
+                </StackPanel>
+
+                <Grid Margin="0,5,0,5">
+                    <Grid.Style>
+                        <Style TargetType="Grid">
+                            <Setter Property="Visibility" Value="Visible"/>
+                            <Style.Triggers>
+                                <MultiDataTrigger>
+                                    <MultiDataTrigger.Conditions>
+                                        <Condition Binding="{Binding Settings.Editor_PlayCount}" Value="False"/>
+                                        <Condition Binding="{Binding Settings.Editor_CreatedAt}" Value="False"/>
+                                        <Condition Binding="{Binding Settings.Editor_UpdatedAt}" Value="False"/>
+                                    </MultiDataTrigger.Conditions>
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                </MultiDataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Grid.Style>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="10"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="10"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Grid.Column="0" Visibility="{Binding Settings.Editor_PlayCount, Converter={StaticResource BoolToVis}}">
+                        <TextBlock Text="再生数:" FontWeight="Bold" Foreground="Gray"/>
+                        <TextBox Text="{Binding ClipData.PlayCount, Mode=OneWay, StringFormat={}{0} 回}" 
+                             IsReadOnly="True" Background="#F0F0F0" Margin="0,5,0,0" Foreground="Gray"/>
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="2" Visibility="{Binding Settings.Editor_CreatedAt, Converter={StaticResource BoolToVis}}">
+                        <TextBlock Text="登録日時:" FontWeight="Bold" Foreground="Gray"/>
+                        <TextBox Text="{Binding ClipData.CreatedAt, Mode=OneWay, StringFormat=yyyy/MM/dd HH:mm:ss}" 
+                             IsReadOnly="True" Background="#F0F0F0" Margin="0,5,0,0" Foreground="Gray"/>
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="4" Visibility="{Binding Settings.Editor_UpdatedAt, Converter={StaticResource BoolToVis}}">
+                        <TextBlock Text="更新日時:" FontWeight="Bold" Foreground="Gray"/>
+                        <TextBox Text="{Binding ClipData.UpdatedAt, Mode=OneWay, StringFormat=yyyy/MM/dd HH:mm:ss}" 
+                             IsReadOnly="True" Background="#F0F0F0" Margin="0,5,0,0" Foreground="Gray"/>
+                    </StackPanel>
+                </Grid>
             </StackPanel>
         </ScrollViewer>
 

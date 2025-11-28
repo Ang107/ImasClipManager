@@ -12,6 +12,8 @@ namespace ImasClipManager.Data
         public DbSet<Space> Spaces { get; set; }
         public DbSet<Performer> Performers { get; set; }
         public DbSet<Playlist> Playlists { get; set; }
+        // DbSetに追加
+        public DbSet<DisplayState> DisplayStates { get; set; }
 
         // データベースの接続設定
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
