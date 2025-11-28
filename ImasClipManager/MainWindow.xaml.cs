@@ -67,32 +67,33 @@ namespace ImasClipManager
             }
         }
 
-        // ▼ 修正: クリック位置が行(DataGridRow)内かチェックする
+        // MainWindow.xaml.cs
         private async void DataGrid_MouseDoubleClick(object sender, MouseButtonEventArgs e)
         {
-            // クリックされた大元の要素(テキストブロックやボーダーなど)を取得
-            var source = e.OriginalSource as DependencyObject;
-
-            // VisualTreeを親に向かって遡り、DataGridRowを探す
-            while (source != null && source != sender)
+            try // ★tryで囲む
             {
-                if (source is DataGridRow)
+                var source = e.OriginalSource as DependencyObject;
+                while (source != null && source != sender)
                 {
-                    // 行が見つかった場合のみ再生処理へ進む
-                    if (sender is DataGrid grid &&
-                        grid.SelectedItem is Clip selectedClip &&
-                        this.DataContext is MainViewModel vm)
+                    if (source is DataGridRow)
                     {
-                        await vm.PlayClip(selectedClip);
+                        if (sender is DataGrid grid &&
+                            grid.SelectedItem is Clip selectedClip &&
+                            this.DataContext is MainViewModel vm)
+                        {
+                            await vm.PlayClip(selectedClip);
+                        }
+                        return;
                     }
-                    return; // 処理完了
+                    source = VisualTreeHelper.GetParent(source);
                 }
-                // 親要素へ移動
-                source = VisualTreeHelper.GetParent(source);
             }
-
-            // ここに来た場合は、行以外の場所（余白やヘッダーなど）がクリックされたということなので何もしない
+            catch (Exception ex) // ★エラーを捕捉
+            {
+                MessageBox.Show($"再生中にエラーが発生しました。\n{ex.Message}", "エラー", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
+
         private void MenuItem_Exit_Click(object sender, RoutedEventArgs e)
         {
             this.Close();
