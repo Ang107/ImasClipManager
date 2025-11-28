@@ -626,17 +626,8 @@ namespace ImasClipManager.ViewModels
                     {
                         // 既に存在する場合はスキップ(維持)
                         if (existingClip.Performers.Any(existing => existing.Id == p.Id)) continue;
-
-                        var trackedPerformer = db.Performers.Local.FirstOrDefault(x => x.Id == p.Id);
-                        if (trackedPerformer != null)
-                        {
-                            existingClip.Performers.Add(trackedPerformer);
-                        }
-                        else
-                        {
-                            db.Attach(p);
-                            existingClip.Performers.Add(p);
-                        }
+                        db.Attach(p);
+                        existingClip.Performers.Add(p);
                     }
 
                     await db.SaveChangesAsync(); // ★ここを非同期に
