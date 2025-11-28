@@ -44,9 +44,9 @@
                     <MenuItem Header="出演者" IsCheckable="True" IsChecked="{Binding Settings.Table_Performers}"/>
                     <MenuItem Header="歌詞" IsCheckable="True" IsChecked="{Binding Settings.Table_Lyrics}"/>
                     <MenuItem Header="備考" IsCheckable="True" IsChecked="{Binding Settings.Table_Remarks}"/>
-                    <MenuItem Header="再生数" IsCheckable="True" IsChecked="{Binding Settings.Table_PlayCount}"/>
                     <MenuItem Header="登録日時" IsCheckable="True" IsChecked="{Binding Settings.Table_CreatedAt}"/>
                     <MenuItem Header="更新日時" IsCheckable="True" IsChecked="{Binding Settings.Table_UpdatedAt}"/>
+                    <MenuItem Header="再生数" IsCheckable="True" IsChecked="{Binding Settings.Table_PlayCount}"/>
                 </MenuItem>
 
                 <MenuItem Header="詳細画面に表示する項目">
@@ -62,9 +62,9 @@
                     <MenuItem Header="出演者" IsCheckable="True" IsChecked="{Binding Settings.Editor_Performers}"/>
                     <MenuItem Header="歌詞" IsCheckable="True" IsChecked="{Binding Settings.Editor_Lyrics}"/>
                     <MenuItem Header="備考" IsCheckable="True" IsChecked="{Binding Settings.Editor_Remarks}"/>
-                    <MenuItem Header="再生数" IsCheckable="True" IsChecked="{Binding Settings.Editor_PlayCount}"/>
                     <MenuItem Header="登録日時" IsCheckable="True" IsChecked="{Binding Settings.Editor_CreatedAt}"/>
                     <MenuItem Header="更新日時" IsCheckable="True" IsChecked="{Binding Settings.Editor_UpdatedAt}"/>
+                    <MenuItem Header="再生数" IsCheckable="True" IsChecked="{Binding Settings.Editor_PlayCount}"/>
                 </MenuItem>
             </MenuItem>
         </Menu>
@@ -286,6 +286,7 @@
 
                     <DataGrid.Resources>
                         <Style TargetType="TextBlock" x:Key="BaseTextStyle">
+                            <Setter Property="TextWrapping" Value="NoWrap"/>
                             <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
                             <Setter Property="VerticalAlignment" Value="Center"/>
                             <Setter Property="Margin" Value="5,0"/>
@@ -302,136 +303,171 @@
                         <Style TargetType="DataGridColumnHeader">
                             <Setter Property="HorizontalContentAlignment" Value="Center"/>
                             <Setter Property="FontWeight" Value="Bold"/>
+                            <Setter Property="ContentTemplate">
+                                <Setter.Value>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding}" 
+                                                   TextTrimming="CharacterEllipsis" 
+                                                   ToolTip="{Binding}"
+                                                   VerticalAlignment="Center"/>
+                                    </DataTemplate>
+                                </Setter.Value>
+                            </Setter>
                         </Style>
                     </DataGrid.Resources>
 
                     <DataGrid.Columns>
-                        <DataGridTemplateColumn Header="サムネ" Width="0.8*" Visibility="{Binding Data.Settings.Table_Thumbnail, Source={StaticResource Proxy}, Converter={StaticResource BoolToVis}}" SortMemberPath="DurationMs">
+                        <DataGridTemplateColumn Header="サムネ" Width="0.8*" SortMemberPath="DurationMs" Visibility="{Binding Data.Settings.Table_Thumbnail, Source={StaticResource Proxy}, Converter={StaticResource BoolToVis}}">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
-                                    <Grid HorizontalAlignment="Center" VerticalAlignment="Center">
-
-                                        <Viewbox Stretch="Uniform">
-
-                                            <Border Width="80" Height="45" Background="Black" CornerRadius="3" BorderBrush="LightGray" BorderThickness="1">
-                                                <Grid>
-                                                    <Border CornerRadius="3">
-                                                        <Border.Background>
-                                                            <ImageBrush ImageSource="{Binding ThumbnailPath, Converter={StaticResource PathToImageConv}}" Stretch="Uniform"/>
-                                                        </Border.Background>
-                                                    </Border>
-
-                                                    <Border Background="#CC000000" 
-                                                        VerticalAlignment="Bottom" 
-                                                        HorizontalAlignment="Right" 
-                                                        Margin="0,0,2,2" 
-                                                        Padding="2,0" 
-                                                        CornerRadius="2">
-                                                        <TextBlock Text="{Binding DurationDisplayStr}" 
-                                                           Foreground="White" 
-                                                           FontSize="11"
-                                                           FontWeight="Bold"/>
-                                                    </Border>
-                                                </Grid>
-                                            </Border>
-                                        </Viewbox>
-                                    </Grid>
+                                    <Border Background="Transparent" ToolTip="{Binding DurationDisplayStr}">
+                                        <Grid HorizontalAlignment="Center" VerticalAlignment="Center">
+                                            <Viewbox Stretch="Uniform">
+                                                <Border Width="80" Height="45" Background="Black" CornerRadius="3" BorderBrush="LightGray" BorderThickness="1">
+                                                    <Grid>
+                                                        <Border CornerRadius="3">
+                                                            <Border.Background>
+                                                                <ImageBrush ImageSource="{Binding ThumbnailPath, Converter={StaticResource PathToImageConv}}" Stretch="Uniform"/>
+                                                            </Border.Background>
+                                                        </Border>
+                                                        <Border Background="#CC000000" VerticalAlignment="Bottom" HorizontalAlignment="Right" Margin="0,0,2,2" Padding="2,0" CornerRadius="2">
+                                                            <TextBlock Text="{Binding DurationDisplayStr}" Foreground="White" FontSize="11" FontWeight="Bold"/>
+                                                        </Border>
+                                                    </Grid>
+                                                </Border>
+                                            </Viewbox>
+                                        </Grid>
+                                    </Border>
                                 </DataTemplate>
                             </DataGridTemplateColumn.CellTemplate>
                         </DataGridTemplateColumn>
-                        <DataGridTextColumn Header="動画ファイルパス" 
-                                    Binding="{Binding FilePath}" 
-                                    Width="1.5*" 
-                                    ElementStyle="{StaticResource LeftTextStyle}"
-                                    Visibility="{Binding Data.Settings.Table_FilePath, Source={StaticResource Proxy}, Converter={StaticResource BoolToVis}}"/>
 
-                        <DataGridTextColumn Header="再生開始" 
-                                    Binding="{Binding StartTimeStr}" 
-                                    Width="0.9*" 
-                                    ElementStyle="{StaticResource CenterTextStyle}"
-                                    Visibility="{Binding Data.Settings.Table_StartTime, Source={StaticResource Proxy}, Converter={StaticResource BoolToVis}}"/>
+                        <DataGridTemplateColumn Header="動画ファイルパス" Width="1.5*" SortMemberPath="FilePath" Visibility="{Binding Data.Settings.Table_FilePath, Source={StaticResource Proxy}, Converter={StaticResource BoolToVis}}">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <Border Background="Transparent" ToolTip="{Binding FilePath}">
+                                        <TextBlock Text="{Binding FilePath}" Style="{StaticResource LeftTextStyle}"/>
+                                    </Border>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
 
-                        <DataGridTextColumn Header="再生終了" 
-                                    Binding="{Binding EndTimeStr}" 
-                                    Width="0.9*" 
-                                    ElementStyle="{StaticResource CenterTextStyle}"
-                                    Visibility="{Binding Data.Settings.Table_EndTime, Source={StaticResource Proxy}, Converter={StaticResource BoolToVis}}"/>
-                        <DataGridTextColumn Header="曲名" Binding="{Binding SongTitle}" Width="1.5*" ElementStyle="{StaticResource CenterTextStyle}" Visibility="{Binding Data.Settings.Table_SongTitle, Source={StaticResource Proxy}, Converter={StaticResource BoolToVis}}"/>
-                        <DataGridTextColumn Header="公演名" Binding="{Binding ConcertName}" Width="1.5*" ElementStyle="{StaticResource CenterTextStyle}" Visibility="{Binding Data.Settings.Table_ConcertName, Source={StaticResource Proxy}, Converter={StaticResource BoolToVis}}"/>
-                        <DataGridTextColumn Header="公演日" Binding="{Binding ConcertDate, StringFormat=yyyy/MM/dd}" Width="0.8*" ElementStyle="{StaticResource CenterTextStyle}" Visibility="{Binding Data.Settings.Table_ConcertDate, Source={StaticResource Proxy}, Converter={StaticResource BoolToVis}}"/>
-                        <DataGridTextColumn Header="形式" Binding="{Binding LiveType, Converter={StaticResource LiveTypeConv}}" Width="0.6*" ElementStyle="{StaticResource CenterTextStyle}" Visibility="{Binding Data.Settings.Table_LiveType, Source={StaticResource Proxy}, Converter={StaticResource BoolToVis}}"/>
-                        <DataGridTemplateColumn Header="ブランド"
-                            Width="1.2*"
-                            SortMemberPath="Brands"
-                            Visibility="{Binding Data.Settings.Table_Brands, Source={StaticResource Proxy}, Converter={StaticResource BoolToVis}}">
+                        <DataGridTemplateColumn Header="再生開始" Width="0.9*" SortMemberPath="StartTimeMs" Visibility="{Binding Data.Settings.Table_StartTime, Source={StaticResource Proxy}, Converter={StaticResource BoolToVis}}">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
-                                    <ScrollViewer VerticalScrollBarVisibility="Auto"
-                                      HorizontalScrollBarVisibility="Disabled"
-                                      CanContentScroll="True">
-                                        <TextBlock Text="{Binding Brands, Converter={StaticResource BrandTypeConv}}"
-                                       Style="{StaticResource CenterTextStyle}"
-                                       TextWrapping="NoWrap"/>
-                                    </ScrollViewer>
+                                    <Border Background="Transparent" ToolTip="{Binding StartTimeStr}">
+                                        <TextBlock Text="{Binding StartTimeStr}" Style="{StaticResource CenterTextStyle}"/>
+                                    </Border>
                                 </DataTemplate>
                             </DataGridTemplateColumn.CellTemplate>
                         </DataGridTemplateColumn>
-                        <DataGridTemplateColumn Header="出演者"
-                            Width="1.5*"
-                            SortMemberPath="PerformersSortKey"
-                            Visibility="{Binding Data.Settings.Table_Performers, Source={StaticResource Proxy}, Converter={StaticResource BoolToVis}}">
+
+                        <DataGridTemplateColumn Header="再生終了" Width="0.9*" SortMemberPath="EndTimeMs" Visibility="{Binding Data.Settings.Table_EndTime, Source={StaticResource Proxy}, Converter={StaticResource BoolToVis}}">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
-                                    <ScrollViewer VerticalScrollBarVisibility="Auto"
-                                      HorizontalScrollBarVisibility="Disabled"
-                                      CanContentScroll="True">
-                                        <TextBlock Text="{Binding Converter={StaticResource ClipPerformersConv}}"
-                                       Style="{StaticResource CenterTextStyle}"
-                                       TextWrapping="NoWrap"/>
-                                    </ScrollViewer>
+                                    <Border Background="Transparent" ToolTip="{Binding EndTimeStr}">
+                                        <TextBlock Text="{Binding EndTimeStr}" Style="{StaticResource CenterTextStyle}"/>
+                                    </Border>
                                 </DataTemplate>
                             </DataGridTemplateColumn.CellTemplate>
                         </DataGridTemplateColumn>
-                        <DataGridTemplateColumn Header="歌詞"
-                            Width="2*"
-                            SortMemberPath="Lyrics"
-                            Visibility="{Binding Data.Settings.Table_Lyrics, Source={StaticResource Proxy}, Converter={StaticResource BoolToVis}}">
+
+                        <DataGridTemplateColumn Header="曲名" Width="1.5*" SortMemberPath="SongTitle" Visibility="{Binding Data.Settings.Table_SongTitle, Source={StaticResource Proxy}, Converter={StaticResource BoolToVis}}">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
-                                    <ScrollViewer VerticalScrollBarVisibility="Auto"
-                                      HorizontalScrollBarVisibility="Disabled"
-                                      CanContentScroll="True">
-                                        <TextBlock Text="{Binding Lyrics}"
-                                       Style="{StaticResource LeftTextStyle}"
-                                       TextWrapping="NoWrap"/>
-                                    </ScrollViewer>
+                                    <Border Background="Transparent" ToolTip="{Binding SongTitle}">
+                                        <TextBlock Text="{Binding SongTitle}" Style="{StaticResource CenterTextStyle}"/>
+                                    </Border>
                                 </DataTemplate>
                             </DataGridTemplateColumn.CellTemplate>
                         </DataGridTemplateColumn>
-                        <DataGridTemplateColumn Header="備考"
-                            Width="1.5*"
-                            SortMemberPath="Remarks"
-                            Visibility="{Binding Data.Settings.Table_Remarks, Source={StaticResource Proxy}, Converter={StaticResource BoolToVis}}">
+
+                        <DataGridTemplateColumn Header="公演名" Width="1.5*" SortMemberPath="ConcertName" Visibility="{Binding Data.Settings.Table_ConcertName, Source={StaticResource Proxy}, Converter={StaticResource BoolToVis}}">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
-                                    <ScrollViewer VerticalScrollBarVisibility="Auto"
-                                      HorizontalScrollBarVisibility="Disabled"
-                                      CanContentScroll="True">
-                                        <TextBlock Text="{Binding Remarks}"
-                                       Style="{StaticResource LeftTextStyle}"
-                                       TextWrapping="NoWrap"/>
-                                    </ScrollViewer>
+                                    <Border Background="Transparent" ToolTip="{Binding ConcertName}">
+                                        <TextBlock Text="{Binding ConcertName}" Style="{StaticResource CenterTextStyle}"/>
+                                    </Border>
                                 </DataTemplate>
                             </DataGridTemplateColumn.CellTemplate>
                         </DataGridTemplateColumn>
-                        <DataGridTextColumn Header="再生数" Binding="{Binding PlayCount}" Width="0.5*" ElementStyle="{StaticResource CenterTextStyle}" Visibility="{Binding Data.Settings.Table_PlayCount, Source={StaticResource Proxy}, Converter={StaticResource BoolToVis}}"/>
+
+                        <DataGridTemplateColumn Header="公演日" Width="0.8*" SortMemberPath="ConcertDate" Visibility="{Binding Data.Settings.Table_ConcertDate, Source={StaticResource Proxy}, Converter={StaticResource BoolToVis}}">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <Border Background="Transparent" ToolTip="{Binding ConcertDate, StringFormat=yyyy/MM/dd}">
+                                        <TextBlock Text="{Binding ConcertDate, StringFormat=yyyy/MM/dd}" Style="{StaticResource CenterTextStyle}"/>
+                                    </Border>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+
+                        <DataGridTemplateColumn Header="形式" Width="0.6*" SortMemberPath="LiveType" Visibility="{Binding Data.Settings.Table_LiveType, Source={StaticResource Proxy}, Converter={StaticResource BoolToVis}}">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <Border Background="Transparent" ToolTip="{Binding LiveType, Converter={StaticResource LiveTypeConv}}">
+                                        <TextBlock Text="{Binding LiveType, Converter={StaticResource LiveTypeConv}}" Style="{StaticResource CenterTextStyle}"/>
+                                    </Border>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+
+                        <DataGridTemplateColumn Header="ブランド" Width="1.2*" SortMemberPath="Brands" Visibility="{Binding Data.Settings.Table_Brands, Source={StaticResource Proxy}, Converter={StaticResource BoolToVis}}">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <Border Background="Transparent" ToolTip="{Binding Brands, Converter={StaticResource BrandTypeConv}}">
+                                        <TextBlock Text="{Binding Brands, Converter={StaticResource BrandTypeConv}}" 
+                                                Style="{StaticResource CenterTextStyle}"
+                                                TextTrimming="CharacterEllipsis"/>
+                                    </Border>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+
+                        <DataGridTemplateColumn Header="出演者" Width="1.5*" SortMemberPath="PerformersSortKey" Visibility="{Binding Data.Settings.Table_Performers, Source={StaticResource Proxy}, Converter={StaticResource BoolToVis}}">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <Border Background="Transparent" ToolTip="{Binding Converter={StaticResource ClipPerformersConv}}">
+                                        <TextBlock Text="{Binding Converter={StaticResource ClipPerformersConv}}" 
+                                                Style="{StaticResource CenterTextStyle}"
+                                                TextTrimming="CharacterEllipsis"/>
+                                    </Border>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+
+                        <DataGridTemplateColumn Header="歌詞" Width="2*" SortMemberPath="Lyrics" Visibility="{Binding Data.Settings.Table_Lyrics, Source={StaticResource Proxy}, Converter={StaticResource BoolToVis}}">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <Border Background="Transparent" ToolTip="{Binding Lyrics}">
+                                        <TextBlock Text="{Binding Lyrics}" Style="{StaticResource LeftTextStyle}"/>
+                                    </Border>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+
+                        <DataGridTemplateColumn Header="備考" Width="1.5*" SortMemberPath="Remarks" Visibility="{Binding Data.Settings.Table_Remarks, Source={StaticResource Proxy}, Converter={StaticResource BoolToVis}}">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <Border Background="Transparent" ToolTip="{Binding Remarks}">
+                                        <TextBlock Text="{Binding Remarks}" Style="{StaticResource LeftTextStyle}"/>
+                                    </Border>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+
                         <DataGridTemplateColumn Header="登録日時" Width="0.9*" SortMemberPath="CreatedAt" Visibility="{Binding Data.Settings.Table_CreatedAt, Source={StaticResource Proxy}, Converter={StaticResource BoolToVis}}">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
-                                    <StackPanel VerticalAlignment="Center">
-                                        <TextBlock Text="{Binding CreatedAt, StringFormat=yyyy/MM/dd}" HorizontalAlignment="Center" TextTrimming="CharacterEllipsis"/>
-                                        <TextBlock Text="{Binding CreatedAt, StringFormat=HH:mm:ss}" HorizontalAlignment="Center" TextTrimming="CharacterEllipsis"/>
-                                    </StackPanel>
+                                    <Border Background="Transparent">
+                                        <Border.ToolTip>
+                                            <TextBlock Text="{Binding CreatedAt, StringFormat='yyyy/MM/dd - HH:mm:ss'}"/>
+                                        </Border.ToolTip>
+                                        <StackPanel VerticalAlignment="Center">
+                                            <TextBlock Text="{Binding CreatedAt, StringFormat=yyyy/MM/dd}" HorizontalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                                            <TextBlock Text="{Binding CreatedAt, StringFormat=HH:mm:ss}" HorizontalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                                        </StackPanel>
+                                    </Border>
                                 </DataTemplate>
                             </DataGridTemplateColumn.CellTemplate>
                         </DataGridTemplateColumn>
@@ -439,10 +475,25 @@
                         <DataGridTemplateColumn Header="更新日時" Width="0.9*" SortMemberPath="UpdatedAt" Visibility="{Binding Data.Settings.Table_UpdatedAt, Source={StaticResource Proxy}, Converter={StaticResource BoolToVis}}">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
-                                    <StackPanel VerticalAlignment="Center">
-                                        <TextBlock Text="{Binding UpdatedAt, StringFormat=yyyy/MM/dd}" HorizontalAlignment="Center" TextTrimming="CharacterEllipsis"/>
-                                        <TextBlock Text="{Binding UpdatedAt, StringFormat=HH:mm:ss}" HorizontalAlignment="Center" TextTrimming="CharacterEllipsis"/>
-                                    </StackPanel>
+                                    <Border Background="Transparent">
+                                        <Border.ToolTip>
+                                            <TextBlock Text="{Binding UpdatedAt, StringFormat='yyyy/MM/dd - HH:mm:ss'}"/>
+                                        </Border.ToolTip>
+                                        <StackPanel VerticalAlignment="Center">
+                                            <TextBlock Text="{Binding UpdatedAt, StringFormat=yyyy/MM/dd}" HorizontalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                                            <TextBlock Text="{Binding UpdatedAt, StringFormat=HH:mm:ss}" HorizontalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                                        </StackPanel>
+                                    </Border>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+
+                        <DataGridTemplateColumn Header="再生数" Width="0.5*" SortMemberPath="PlayCount" Visibility="{Binding Data.Settings.Table_PlayCount, Source={StaticResource Proxy}, Converter={StaticResource BoolToVis}}">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <Border Background="Transparent" ToolTip="{Binding PlayCount}">
+                                        <TextBlock Text="{Binding PlayCount}" Style="{StaticResource CenterTextStyle}"/>
+                                    </Border>
                                 </DataTemplate>
                             </DataGridTemplateColumn.CellTemplate>
                         </DataGridTemplateColumn>

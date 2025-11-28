@@ -282,22 +282,22 @@
                         <ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
 
-                    <StackPanel Grid.Column="0" Visibility="{Binding Settings.Editor_PlayCount, Converter={StaticResource BoolToVis}}">
-                        <TextBlock Text="再生数:" FontWeight="Bold" Foreground="Gray"/>
-                        <TextBox Text="{Binding ClipData.PlayCount, Mode=OneWay, StringFormat={}{0} 回}" 
-                             IsReadOnly="True" Background="#F0F0F0" Margin="0,5,0,0" Foreground="Gray"/>
-                    </StackPanel>
-
                     <StackPanel Grid.Column="2" Visibility="{Binding Settings.Editor_CreatedAt, Converter={StaticResource BoolToVis}}">
                         <TextBlock Text="登録日時:" FontWeight="Bold" Foreground="Gray"/>
-                        <TextBox Text="{Binding ClipData.CreatedAt, Mode=OneWay, StringFormat=yyyy/MM/dd HH:mm:ss}" 
+                        <TextBox Text="{Binding ClipData.CreatedAt, Mode=OneWay, StringFormat=yyyy/MM/dd - HH:mm:ss}" 
                              IsReadOnly="True" Background="#F0F0F0" Margin="0,5,0,0" Foreground="Gray"/>
                     </StackPanel>
 
                     <StackPanel Grid.Column="4" Visibility="{Binding Settings.Editor_UpdatedAt, Converter={StaticResource BoolToVis}}">
                         <TextBlock Text="更新日時:" FontWeight="Bold" Foreground="Gray"/>
-                        <TextBox Text="{Binding ClipData.UpdatedAt, Mode=OneWay, StringFormat=yyyy/MM/dd HH:mm:ss}" 
+                        <TextBox Text="{Binding ClipData.UpdatedAt, Mode=OneWay, StringFormat=yyyy/MM/dd - HH:mm:ss}" 
                              IsReadOnly="True" Background="#F0F0F0" Margin="0,5,0,0" Foreground="Gray"/>
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="0" Visibility="{Binding Settings.Editor_PlayCount, Converter={StaticResource BoolToVis}}">
+                        <TextBlock Text="再生数:" FontWeight="Bold" Foreground="Gray"/>
+                        <TextBox Text="{Binding ClipData.PlayCount, Mode=OneWay, StringFormat={}{0} 回}" 
+                        IsReadOnly="True" Background="#F0F0F0" Margin="0,5,0,0" Foreground="Gray"/>
                     </StackPanel>
                 </Grid>
             </StackPanel>
