@@ -27,6 +27,93 @@ namespace ImasClipManager.ViewModels
         public ObservableCollection<Clip> Clips { get; set; } = new ObservableCollection<Clip>();
         private ICollectionView _clipsView;
 
+        // ★追加: スペースペインの幅（初期値 250）
+        [ObservableProperty]
+        private double _spacePaneWidth = 250.0;
+
+        // ★追加: 閉じる直前の幅を記録する変数
+        private double _lastSpacePaneWidth = 250.0;
+
+        // ★追加: 閾値（これより小さい幅で保存されていたらデフォルトに戻す）
+        private const double RestoreThreshold = 100.0;
+        private const double DefaultWidth = 250.0;
+        private const double CollapsedWidth = 50.0;
+        // ★追加: ループ防止・ドラッグ判定用のフラグ
+        private bool _isSyncingMode = false;
+
+        // ★修正: 幅が変更されたときの処理
+        partial void OnSpacePaneWidthChanged(double value)
+        {
+            // ご要望により「閾値以下なら50にする」処理は削除しました。
+            // 50未満にならない制限はViewのMinWidth="50"で担保されます。
+
+            // ここでは、幅の変更に合わせて「開閉フラグ」だけを同期させます。
+            // ただし、ここでの変更がトリガーとなって OnIsSpacePaneVisibleChanged が呼ばれ、
+            // 幅が勝手に書き換わるのを防ぐため、フラグ(_isSyncingMode)を立てます。
+            _isSyncingMode = true;
+            try
+            {
+                // 幅が最小幅(50)になったら「閉」状態
+                // ※計算誤差を考慮して少し余裕を持たせて判定しても良いですが、
+                // ViewのMinWidthと一致していれば == でもおおよそ機能します
+                if (value <= CollapsedWidth)
+                {
+                    if (IsSpacePaneVisible)
+                    {
+                        IsSpacePaneVisible = false;
+                    }
+                }
+                // 幅が50を超えていたら「開」状態
+                else
+                {
+                    if (!IsSpacePaneVisible)
+                    {
+                        IsSpacePaneVisible = true;
+                    }
+                }
+            }
+            finally
+            {
+                _isSyncingMode = false;
+            }
+        }
+
+        // ★修正: 開閉フラグ変更時の処理
+        partial void OnIsSpacePaneVisibleChanged(bool value)
+        {
+            // ドラッグ操作によって幅が変更され、その結果としてここが呼ばれた場合は
+            // 幅の復元処理（強制リサイズ）を行わないようにします。
+            // これにより「少し広げただけで250に戻される」問題が解消します。
+            if (_isSyncingMode) return;
+
+            if (value) // ボタン操作で開くとき
+            {
+                // 記録された幅が閾値(100)以下ならデフォルト(250)で開く
+                if (_lastSpacePaneWidth <= RestoreThreshold)
+                {
+                    SpacePaneWidth = DefaultWidth;
+                }
+                else
+                {
+                    SpacePaneWidth = _lastSpacePaneWidth;
+                }
+            }
+            else // ボタン操作で閉じるとき
+            {
+                // 現在の幅が50より大きい場合のみ記録する
+                if (SpacePaneWidth > CollapsedWidth)
+                {
+                    _lastSpacePaneWidth = SpacePaneWidth;
+                }
+
+                // 閉じるので幅を50にする
+                if (SpacePaneWidth > CollapsedWidth)
+                {
+                    SpacePaneWidth = CollapsedWidth;
+                }
+            }
+        }
+
         // --- スペース関連 ---
         public ObservableCollection<Space> Spaces { get; set; } = new ObservableCollection<Space>();
 
