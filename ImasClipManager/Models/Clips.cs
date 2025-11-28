@@ -140,5 +140,6 @@ namespace ImasClipManager.Models
         public DateTime UpdatedAt { get; set; } = DateTime.Now;
 
         public virtual ICollection<Performer> Performers { get; set; } = new List<Performer>();
+        public virtual ICollection<Playlist> Playlists { get; set; } = new List<Playlist>();
     }
 }

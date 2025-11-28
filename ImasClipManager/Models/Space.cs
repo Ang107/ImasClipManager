@@ -14,5 +14,6 @@ namespace ImasClipManager.Models
 
         // Clipとのリレーション
         public virtual ICollection<Clip> Clips { get; set; } = new List<Clip>();
+        public virtual ICollection<Playlist> Playlists { get; set; } = new List<Playlist>();
     }
 }
