@@ -27,8 +27,12 @@ namespace ImasClipManager.Services
         public async Task InitializeAsync()
         {
             if (_isInitialized) return;
-            string ffmpegPath = AppDomain.CurrentDomain.BaseDirectory;
+            // 実行ファイルの直下を見ている
+            string ffmpegPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "FFmpeg");
+
             FFmpeg.SetExecutablesPath(ffmpegPath);
+
+            // ファイルがなければダウンロード（配布時は削除またはコメントアウト推奨）
             if (!File.Exists(Path.Combine(ffmpegPath, "ffmpeg.exe")))
             {
                 await FFmpegDownloader.GetLatestVersion(FFmpegVersion.Official, ffmpegPath);

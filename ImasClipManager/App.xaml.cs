@@ -47,12 +47,23 @@ namespace ImasClipManager
             return services.BuildServiceProvider();
         }
 
-        protected override void OnStartup(StartupEventArgs e)
+        protected override async void OnStartup(StartupEventArgs e)
         {
             base.OnStartup(e);
 
             // VLCエンジンの初期化
             Core.Initialize();
+
+            var thumbnailService = Services.GetRequiredService<ThumbnailService>();
+            try
+            {
+                await thumbnailService.InitializeAsync();
+            }
+            catch (Exception ex)
+            {
+                // 万が一初期化に失敗しても、アプリ自体は起動させる（必要に応じてログ出力）
+                System.Diagnostics.Debug.WriteLine($"FFmpeg init failed: {ex.Message}");
+            }
 
             // DIコンテナからMainWindowを取得して表示（依存関係が自動解決される）
             var mainWindow = Services.GetRequiredService<MainWindow>();
