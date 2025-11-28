@@ -18,19 +18,11 @@ namespace ImasClipManager.Data
         // データベースの接続設定
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
-            // ローカルアプリケーションデータフォルダ (例: C:\Users\User\AppData\Local\ImasClipManager) を取得
-            var folder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "ImasClipManager");
-
-            // フォルダがなければ作成
-            if (!Directory.Exists(folder))
+            if (!Directory.Exists(Constants.AppDataFolder))
             {
-                Directory.CreateDirectory(folder);
+                Directory.CreateDirectory(Constants.AppDataFolder);
             }
-
-            var dbPath = Path.Combine(folder, "ImasClipManager.db");
-
-            // フルパスを指定してSQLiteを使用
-            optionsBuilder.UseSqlite($"Data Source={dbPath}");
+            optionsBuilder.UseSqlite($"Data Source={Constants.DbFilePath}");
         }
     }
 }
