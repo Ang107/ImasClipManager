@@ -385,7 +385,7 @@ namespace ImasClipManager.ViewModels
         {
             if (clip == null) return;
 
-            using (var db = new AppDbContext())
+            using (var db = _dbFactory())
             {
                 var target = await db.Clips.FindAsync(clip.Id);
                 if (target != null)
@@ -549,7 +549,7 @@ namespace ImasClipManager.ViewModels
                                       "削除確認", MessageBoxButton.YesNo, MessageBoxImage.Warning);
             if (res == MessageBoxResult.Yes)
             {
-                using (var db = new AppDbContext())
+                using (var db = _dbFactory())
                 {
                     var target = await db.Spaces.FindAsync(space.Id);
                     if (target != null)
