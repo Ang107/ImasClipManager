@@ -22,8 +22,9 @@ namespace ImasClipManager.Models
 
         // --- UI制御用プロパティ (DBには保存しない) ---
 
-        [NotMapped]
+        // [NotMapped] ← フィールドへの属性は削除し、以下のように変更
         [ObservableProperty]
+        [property: NotMapped] // 生成されるプロパティにNotMappedを適用
         private bool _isEditing;
 
         // 編集開始前の名前を保持（キャンセル用）

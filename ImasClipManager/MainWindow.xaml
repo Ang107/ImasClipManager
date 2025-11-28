@@ -119,8 +119,10 @@
                             <Grid MinHeight="34">
 
                                 <TextBlock Text="{Binding Name}" 
-                            VerticalAlignment="Center"
-                            Padding="10,0">
+                                    VerticalAlignment="Center"
+                                    Padding="10,0"
+                                    TextTrimming="CharacterEllipsis"
+                                    ToolTip="{Binding Name}">
                                     <TextBlock.Style>
                                         <Style TargetType="TextBlock">
                                             <Setter Property="Visibility" Value="Visible"/>
@@ -139,13 +141,13 @@
                                 </TextBlock>
 
                                 <TextBox Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}" 
-                            VerticalAlignment="Stretch"
-                            VerticalContentAlignment="Center"
-                            Padding="5,0"
-                            Margin="0"
-                            BorderThickness="1"
-                            BorderBrush="#0078D7"
-                            Loaded="SpaceNameTextBox_Loaded">
+                                    VerticalAlignment="Stretch"
+                                    VerticalContentAlignment="Center"
+                                    Padding="5,0"
+                                    Margin="0"
+                                    BorderThickness="1"
+                                    BorderBrush="#0078D7"
+                                    IsVisibleChanged="SpaceNameTextBox_IsVisibleChanged">
                                     <TextBox.Style>
                                         <Style TargetType="TextBox">
                                             <Setter Property="Visibility" Value="Collapsed"/>
@@ -160,6 +162,9 @@
                                     <TextBox.InputBindings>
                                         <KeyBinding Key="Enter" 
                                     Command="{Binding DataContext.CommitSpaceEditCommand, RelativeSource={RelativeSource AncestorType=ListBox}}"
+                                    CommandParameter="{Binding}"/>
+                                        <KeyBinding Key="Escape" 
+                                    Command="{Binding DataContext.CancelSpaceEditCommand, RelativeSource={RelativeSource AncestorType=ListBox}}"
                                     CommandParameter="{Binding}"/>
                                     </TextBox.InputBindings>
 

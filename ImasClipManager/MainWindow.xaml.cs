@@ -35,13 +35,17 @@ namespace ImasClipManager
             }
         }
 
-        // TextBoxが表示されたらフォーカスを当てて全選択する
-        private void SpaceNameTextBox_Loaded(object sender, RoutedEventArgs e)
+        private void SpaceNameTextBox_IsVisibleChanged(object sender, DependencyPropertyChangedEventArgs e)
         {
-            if (sender is TextBox textBox)
+            // 表示されたタイミング（Visibleになったとき）のみ処理する
+            if (sender is TextBox textBox && textBox.Visibility == Visibility.Visible)
             {
-                textBox.Focus();
-                textBox.SelectAll();
+                // UIの描画タイミングとずれないよう、少し待ってからフォーカスする
+                Dispatcher.InvokeAsync(() =>
+                {
+                    textBox.Focus();
+                    textBox.SelectAll();
+                }, DispatcherPriority.Input);
             }
         }
 

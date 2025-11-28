@@ -426,6 +426,25 @@ namespace ImasClipManager.ViewModels
         }
 
         [RelayCommand]
+        public void CancelSpaceEdit(Space space)
+        {
+            if (space == null || !space.IsEditing) return;
+
+            if (space.IsNew)
+            {
+                // 新規作成中ならリストから削除
+                Spaces.Remove(space);
+            }
+            else
+            {
+                // 既存なら元の名前に戻して編集モード終了
+                space.Name = space.OriginalName;
+                space.IsEditing = false;
+            }
+            // ここでは SaveSpaceAsync を呼ばない！
+        }
+
+        [RelayCommand]
         public async Task DeleteSpace(Space space)
         {
             if (space == null) return;
