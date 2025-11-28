@@ -147,6 +147,7 @@
                                     Margin="0"
                                     BorderThickness="1"
                                     BorderBrush="#0078D7"
+                                     Loaded="SpaceNameTextBox_Loaded"
                                     IsVisibleChanged="SpaceNameTextBox_IsVisibleChanged">
                                     <TextBox.Style>
                                         <Style TargetType="TextBox">

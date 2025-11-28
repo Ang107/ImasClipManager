@@ -20,32 +20,50 @@ namespace ImasClipManager
             viewModel.Spaces.CollectionChanged += Spaces_CollectionChanged;
         }
 
-        // スペースが追加されたら自動的にスクロールする
+        // ImasClipManager/MainWindow.xaml.cs
+
+        // 1. スクロール処理：元の「Background」に戻す
         private void Spaces_CollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
         {
             if (e.Action == NotifyCollectionChangedAction.Add && e.NewItems != null && e.NewItems.Count > 0)
             {
                 var newItem = e.NewItems[0];
-                // UI描画を待ってからスクロール
+                // 優先度 Background (4) で実行
                 Dispatcher.InvokeAsync(() =>
                 {
                     SpaceListBox.ScrollIntoView(newItem);
-                    SpaceListBox.SelectedItem = newItem;
                 }, DispatcherPriority.Background);
             }
         }
 
+        // 2. 編集時用（ダブルクリックなど）：Loadedが走らないのでこちらで処理
         private void SpaceNameTextBox_IsVisibleChanged(object sender, DependencyPropertyChangedEventArgs e)
         {
-            // 表示されたタイミング（Visibleになったとき）のみ処理する
             if (sender is TextBox textBox && textBox.Visibility == Visibility.Visible)
             {
-                // UIの描画タイミングとずれないよう、少し待ってからフォーカスする
-                Dispatcher.InvokeAsync(() =>
+                // 既存スペースの編集時のみ実行（新規はLoadedに任せる）
+                if (textBox.DataContext is Space space && !space.IsNew)
+                {
+                    Dispatcher.InvokeAsync(() =>
+                    {
+                        textBox.Focus();
+                        textBox.SelectAll();
+                    }, DispatcherPriority.Input);
+                }
+            }
+        }
+
+        // 3. 新規追加用：元のコードと同じ確実なタイミングで処理
+        private void SpaceNameTextBox_Loaded(object sender, RoutedEventArgs e)
+        {
+            if (sender is TextBox textBox)
+            {
+                // 新規追加時のみ実行
+                if (textBox.DataContext is Space space && space.IsNew)
                 {
                     textBox.Focus();
                     textBox.SelectAll();
-                }, DispatcherPriority.Input);
+                }
             }
         }
 
