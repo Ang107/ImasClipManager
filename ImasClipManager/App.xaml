@@ -7,5 +7,6 @@
         <converters:LiveTypeToStringConverter x:Key="LiveTypeConv"/>
         <converters:BrandTypeToStringConverter x:Key="BrandTypeConv"/>
         <converters:ClipPerformersConverter x:Key="ClipPerformersConv"/>
+        <converters:PathToImageConverter x:Key="PathToImageConv"/>
     </Application.Resources>
 </Application>

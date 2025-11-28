@@ -39,7 +39,7 @@
                         <Grid>
                             <Border CornerRadius="4">
                                 <Border.Background>
-                                    <ImageBrush ImageSource="{Binding ClipData.ThumbnailPath}" Stretch="Uniform"/>
+                                    <ImageBrush ImageSource="{Binding ClipData.ThumbnailPath, Converter={StaticResource PathToImageConv}}" Stretch="Uniform"/>
                                 </Border.Background>
                             </Border>
 

@@ -317,7 +317,7 @@
                                                 <Grid>
                                                     <Border CornerRadius="3">
                                                         <Border.Background>
-                                                            <ImageBrush ImageSource="{Binding ThumbnailPath}" Stretch="Uniform"/>
+                                                            <ImageBrush ImageSource="{Binding ThumbnailPath, Converter={StaticResource PathToImageConv}}" Stretch="Uniform"/>
                                                         </Border.Background>
                                                     </Border>
 
