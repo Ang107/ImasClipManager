@@ -324,15 +324,17 @@
                 <StackPanel Visibility="{Binding Settings.Editor_Lyrics, Converter={StaticResource BoolToVis}}">
                     <TextBlock Text="歌詞:" FontWeight="Bold"/>
                     <TextBox Text="{Binding ClipData.Lyrics}" MinHeight="60" Height="Auto" MaxHeight="300"
-                         AcceptsReturn="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" 
-                         Margin="0,5,0,15" IsEnabled="{Binding IsEditable}"/>
+                     AcceptsReturn="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" 
+                     VerticalContentAlignment="Top"
+                     Margin="0,5,0,15" IsEnabled="{Binding IsEditable}"/>
                 </StackPanel>
 
                 <StackPanel Visibility="{Binding Settings.Editor_Remarks, Converter={StaticResource BoolToVis}}">
                     <TextBlock Text="備考:" FontWeight="Bold"/>
                     <TextBox Text="{Binding ClipData.Remarks}" MinHeight="60" Height="Auto" MaxHeight="300"
-                         AcceptsReturn="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" 
-                         Margin="0,5,0,15" IsEnabled="{Binding IsEditable}"/>
+                     AcceptsReturn="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" 
+                     VerticalContentAlignment="Top"
+                     Margin="0,5,0,15" IsEnabled="{Binding IsEditable}"/>
                 </StackPanel>
 
                 <Grid Margin="0,5,0,5">
