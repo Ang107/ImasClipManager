@@ -36,6 +36,7 @@
                     <MenuItem Header="動画ファイルパス" IsCheckable="True" IsChecked="{Binding Settings.Table_FilePath}"/>
                     <MenuItem Header="再生開始" IsCheckable="True" IsChecked="{Binding Settings.Table_StartTime}"/>
                     <MenuItem Header="再生終了" IsCheckable="True" IsChecked="{Binding Settings.Table_EndTime}"/>
+                    <MenuItem Header="クリップ名" IsCheckable="True" IsChecked="{Binding Settings.Table_ClipName}"/>
                     <MenuItem Header="曲名" IsCheckable="True" IsChecked="{Binding Settings.Table_SongTitle}"/>
                     <MenuItem Header="公演名" IsCheckable="True" IsChecked="{Binding Settings.Table_ConcertName}"/>
                     <MenuItem Header="公演日" IsCheckable="True" IsChecked="{Binding Settings.Table_ConcertDate}"/>
@@ -54,6 +55,7 @@
                     <MenuItem Header="動画ファイルパス" IsCheckable="True" IsChecked="{Binding Settings.Editor_FilePath}"/>
                     <MenuItem Header="再生開始" IsCheckable="True" IsChecked="{Binding Settings.Editor_StartTime}"/>
                     <MenuItem Header="再生終了" IsCheckable="True" IsChecked="{Binding Settings.Editor_EndTime}"/>
+                    <MenuItem Header="クリップ名" IsCheckable="True" IsChecked="{Binding Settings.Editor_ClipName}"/>
                     <MenuItem Header="曲名" IsCheckable="True" IsChecked="{Binding Settings.Editor_SongTitle}"/>
                     <MenuItem Header="公演名" IsCheckable="True" IsChecked="{Binding Settings.Editor_ConcertName}"/>
                     <MenuItem Header="公演日" IsCheckable="True" IsChecked="{Binding Settings.Editor_ConcertDate}"/>
@@ -367,6 +369,17 @@
                                 <DataTemplate>
                                     <Border Background="Transparent" ToolTip="{Binding EndTimeStr}">
                                         <TextBlock Text="{Binding EndTimeStr}" Style="{StaticResource CenterTextStyle}"/>
+                                    </Border>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+
+                        <DataGridTemplateColumn Header="クリップ名" Width="1.5*" SortMemberPath="ClipName" 
+                            Visibility="{Binding Data.Settings.Table_ClipName, Source={StaticResource Proxy}, Converter={StaticResource BoolToVis}}">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <Border Background="Transparent" ToolTip="{Binding ClipName}">
+                                        <TextBlock Text="{Binding ClipName}" Style="{StaticResource CenterTextStyle}"/>
                                     </Border>
                                 </DataTemplate>
                             </DataGridTemplateColumn.CellTemplate>

@@ -243,6 +243,11 @@
                     </StackPanel>
                 </Grid>
 
+                <StackPanel Visibility="{Binding Settings.Editor_ClipName, Converter={StaticResource BoolToVis}}">
+                    <TextBlock Text="クリップ名:" FontWeight="Bold"/>
+                    <TextBox Text="{Binding ClipData.ClipName}" Margin="0,5,0,15" IsEnabled="{Binding IsEditable}"/>
+                </StackPanel>
+
                 <StackPanel Visibility="{Binding Settings.Editor_SongTitle, Converter={StaticResource BoolToVis}}">
                     <TextBlock Text="曲名:" FontWeight="Bold"/>
                     <TextBox Text="{Binding ClipData.SongTitle}" Margin="0,5,0,15" IsEnabled="{Binding IsEditable}"/>

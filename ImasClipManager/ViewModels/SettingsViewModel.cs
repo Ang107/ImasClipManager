@@ -32,6 +32,7 @@ namespace ImasClipManager.ViewModels
                     (DisplayContext.Table, "FilePath"),
                     (DisplayContext.Table, "StartTime"),
                     (DisplayContext.Table, "EndTime"),
+                    (DisplayContext.Table, "ClipName"),
                     (DisplayContext.Table, "SongTitle"),
                     (DisplayContext.Table, "ConcertName"),
                     (DisplayContext.Table, "ConcertDate"),
@@ -49,6 +50,7 @@ namespace ImasClipManager.ViewModels
                     (DisplayContext.Editor, "FilePath"),
                     (DisplayContext.Editor, "StartTime"),
                     (DisplayContext.Editor, "EndTime"),
+                    (DisplayContext.Editor, "ClipName"),
                     (DisplayContext.Editor, "SongTitle"),
                     (DisplayContext.Editor, "ConcertName"),
                     (DisplayContext.Editor, "ConcertDate"),
@@ -67,7 +69,8 @@ namespace ImasClipManager.ViewModels
                 {
                     "Table_FilePath",
                     "Table_StartTime",
-                    "Table_EndTime"
+                    "Table_EndTime",
+                    "Table_ClipName"
                 };
 
                 bool needSave = false;
@@ -127,6 +130,7 @@ namespace ImasClipManager.ViewModels
         public bool Table_FilePath { get => GetValue(DisplayContext.Table, "FilePath"); set => SetValue(DisplayContext.Table, "FilePath", value); }
         public bool Table_StartTime { get => GetValue(DisplayContext.Table, "StartTime"); set => SetValue(DisplayContext.Table, "StartTime", value); }
         public bool Table_EndTime { get => GetValue(DisplayContext.Table, "EndTime"); set => SetValue(DisplayContext.Table, "EndTime", value); }
+        public bool Table_ClipName { get => GetValue(DisplayContext.Table, "ClipName"); set => SetValue(DisplayContext.Table, "ClipName", value); }
         public bool Table_SongTitle { get => GetValue(DisplayContext.Table, "SongTitle"); set => SetValue(DisplayContext.Table, "SongTitle", value); }
         public bool Table_ConcertName { get => GetValue(DisplayContext.Table, "ConcertName"); set => SetValue(DisplayContext.Table, "ConcertName", value); }
         public bool Table_ConcertDate { get => GetValue(DisplayContext.Table, "ConcertDate"); set => SetValue(DisplayContext.Table, "ConcertDate", value); }
@@ -144,6 +148,7 @@ namespace ImasClipManager.ViewModels
         public bool Editor_FilePath { get => GetValue(DisplayContext.Editor, "FilePath"); set => SetValue(DisplayContext.Editor, "FilePath", value); }
         public bool Editor_StartTime { get => GetValue(DisplayContext.Editor, "StartTime"); set => SetValue(DisplayContext.Editor, "StartTime", value); }
         public bool Editor_EndTime { get => GetValue(DisplayContext.Editor, "EndTime"); set => SetValue(DisplayContext.Editor, "EndTime", value); }
+        public bool Editor_ClipName { get => GetValue(DisplayContext.Editor, "ClipName"); set => SetValue(DisplayContext.Editor, "ClipName", value); }
         public bool Editor_SongTitle { get => GetValue(DisplayContext.Editor, "SongTitle"); set => SetValue(DisplayContext.Editor, "SongTitle", value); }
         public bool Editor_ConcertName { get => GetValue(DisplayContext.Editor, "ConcertName"); set => SetValue(DisplayContext.Editor, "ConcertName", value); }
         public bool Editor_ConcertDate { get => GetValue(DisplayContext.Editor, "ConcertDate"); set => SetValue(DisplayContext.Editor, "ConcertDate", value); }

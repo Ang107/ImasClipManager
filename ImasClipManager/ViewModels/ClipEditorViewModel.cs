@@ -105,6 +105,7 @@ namespace ImasClipManager.ViewModels
                     FilePath = clip.FilePath,
                     StartTimeMs = clip.StartTimeMs,
                     EndTimeMs = clip.EndTimeMs,
+                    ClipName = clip.ClipName,
                     ConcertName = clip.ConcertName,
                     Brands = clip.Brands,
                     LiveType = clip.LiveType,

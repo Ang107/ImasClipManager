@@ -103,7 +103,7 @@ namespace ImasClipManager.Models
 
             }
         }
-
+        public string ClipName { get; set; } = string.Empty;
         public string ConcertName { get; set; } = string.Empty;
         public BrandType Brands { get; set; } = BrandType.None;
         public LiveType LiveType { get; set; } = LiveType.Seiyuu;
