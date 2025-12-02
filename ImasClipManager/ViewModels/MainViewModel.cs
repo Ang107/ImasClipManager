@@ -134,6 +134,7 @@ namespace ImasClipManager.ViewModels
         // --- 検索 ---
         private CancellationTokenSource? _debounceCts;
         private string _searchText = string.Empty;
+        private Func<Clip, bool>? _currentFilterPredicate;
         public string SearchText
         {
             get => _searchText;
@@ -141,6 +142,7 @@ namespace ImasClipManager.ViewModels
             {
                 if (SetProperty(ref _searchText, value))
                 {
+                    _currentFilterPredicate = SearchQueryParser.Parse(value, Settings);
                     SearchWithDebounce();
                 }
             }
@@ -191,6 +193,29 @@ namespace ImasClipManager.ViewModels
             _ = InitializeAsync();
 
         }
+        private bool FilterClips(object item)
+        {
+            if (item is not Clip clip) return false;
+
+            // パーサーで生成した条件で判定
+            if (_currentFilterPredicate != null)
+            {
+                return _currentFilterPredicate(clip);
+            }
+            return true;
+        }
+
+        // ★追加: 高度な検索ウィンドウを開くコマンド
+        [RelayCommand]
+        public void OpenAdvancedSearch()
+        {
+            var vm = new AdvancedSearchViewModel(this);
+            var win = new Views.AdvancedSearchWindow();
+            win.DataContext = vm;
+            win.Owner = Application.Current.MainWindow;
+            win.Show(); // モードレスで開く（メイン画面の変化が見えるように）
+        }
+
 
         private async Task InitializeAsync()
         {
@@ -251,75 +276,6 @@ namespace ImasClipManager.ViewModels
                 }
             }
             _clipsView?.Refresh();
-        }
-
-        private bool FilterClips(object item)
-        {
-            if (item is not Clip clip) return false;
-            if (string.IsNullOrWhiteSpace(SearchText)) return true;
-
-            var keywords = SearchText.Split(new[] { ' ', '　' }, System.StringSplitOptions.RemoveEmptyEntries);
-
-            foreach (var keyword in keywords)
-            {
-                var comparison = System.StringComparison.OrdinalIgnoreCase;
-                bool isMatch = false;
-
-                // ★追加: 動画ファイルパス (設定がONの場合のみ)
-                if (Settings.Search_FilePath)
-                {
-                    if (clip.FilePath?.Contains(keyword, comparison) ?? false) isMatch = true;
-                }
-
-                // 文字列プロパティ
-                if (!isMatch && Settings.Search_ClipName)
-                {
-                    if (clip.ClipName?.Contains(keyword, comparison) ?? false) isMatch = true;
-                }
-                if (!isMatch && Settings.Search_SongTitle)
-                {
-                    if (clip.SongTitle?.Contains(keyword, comparison) ?? false) isMatch = true;
-                }
-                if (!isMatch && Settings.Search_ConcertName)
-                {
-                    if (clip.ConcertName?.Contains(keyword, comparison) ?? false) isMatch = true;
-                }
-                if (!isMatch && Settings.Search_Lyrics)
-                {
-                    if (clip.Lyrics?.Contains(keyword, comparison) ?? false) isMatch = true;
-                }
-                if (!isMatch && Settings.Search_Remarks)
-                {
-                    if (clip.Remarks?.Contains(keyword, comparison) ?? false) isMatch = true;
-                }
-
-                // ライブ形式
-                if (!isMatch && Settings.Search_LiveType)
-                {
-                    if (clip.LiveType.ToDisplayString().Contains(keyword, comparison)) isMatch = true;
-                }
-
-                // ブランド
-                if (!isMatch && Settings.Search_Brands)
-                {
-                    if (clip.Brands.ToDisplayString().Contains(keyword, comparison)) isMatch = true;
-                }
-
-                // 出演者
-                if (!isMatch && Settings.Search_Performers && clip.Performers != null)
-                {
-                    if (clip.Performers.Any(p =>
-                        (p.Name?.Contains(keyword, comparison) ?? false) ||
-                        (p.Yomi?.Contains(keyword, comparison) ?? false)))
-                    {
-                        isMatch = true;
-                    }
-                }
-
-                if (!isMatch) return false;
-            }
-
-            return true;
         }
 
         // --- クリップ操作コマンド ---

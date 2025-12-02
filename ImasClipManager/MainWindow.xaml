@@ -311,6 +311,16 @@
                                      Padding="12,0,15,0"/>
                         </Grid>
                     </Border>
+                    <Button Content="詳細検索" 
+                            Command="{Binding OpenAdvancedSearchCommand}"
+                            Margin="10,0,0,0" Height="38" Padding="15,0"
+                            Background="Transparent" BorderBrush="Gray" BorderThickness="1">
+                        <Button.Resources>
+                            <Style TargetType="Border">
+                                <Setter Property="CornerRadius" Value="19"/>
+                            </Style>
+                        </Button.Resources>
+                    </Button>
                 </StackPanel>
 
                 <DataGrid Grid.Row="1" 
