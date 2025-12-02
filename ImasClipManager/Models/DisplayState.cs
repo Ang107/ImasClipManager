@@ -5,7 +5,8 @@ namespace ImasClipManager.Models
     public enum DisplayContext
     {
         Table,  // 表 (DataGrid)
-        Editor  // 編集・詳細画面
+        Editor,  // 編集・詳細画面
+        Search  // ★追加: 検索設定
     }
 
     public class DisplayState

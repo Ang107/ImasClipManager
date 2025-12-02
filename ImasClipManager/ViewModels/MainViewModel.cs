@@ -177,6 +177,14 @@ namespace ImasClipManager.ViewModels
             _thumbnailService = thumbnailService;
             _csvDataService = csvDataService;
             Settings = new SettingsViewModel(_dbFactory);
+            // ★追加: 設定(検索対象のON/OFF)が変わったときもフィルタを再実行して即座に反映させる
+            Settings.PropertyChanged += (s, e) =>
+            {
+                if (e.PropertyName != null && e.PropertyName.StartsWith("Search_"))
+                {
+                    _clipsView?.Refresh();
+                }
+            };
             // クリップのフィルタ設定
             _clipsView = CollectionViewSource.GetDefaultView(Clips);
             _clipsView.Filter = FilterClips;
@@ -250,49 +258,56 @@ namespace ImasClipManager.ViewModels
             if (item is not Clip clip) return false;
             if (string.IsNullOrWhiteSpace(SearchText)) return true;
 
-            // 空白区切りでキーワード分割 (全角スペースにも対応)
             var keywords = SearchText.Split(new[] { ' ', '　' }, System.StringSplitOptions.RemoveEmptyEntries);
 
-            // ★変更: すべてのキーワードが含まれているか (AND検索)
             foreach (var keyword in keywords)
             {
-                // 大文字小文字を区別しない比較
                 var comparison = System.StringComparison.OrdinalIgnoreCase;
                 bool isMatch = false;
 
-                // 1. 文字列プロパティのチェック (曲名, 公演名, 歌詞, 備考)
-                if ((clip.ClipName?.Contains(keyword, comparison) ?? false) ||
-                    (clip.SongTitle?.Contains(keyword, comparison) ?? false) ||
-                    (clip.ConcertName?.Contains(keyword, comparison) ?? false) ||
-                    (clip.Lyrics?.Contains(keyword, comparison) ?? false) ||
-                    (clip.Remarks?.Contains(keyword, comparison) ?? false))
+                // ★追加: 動画ファイルパス (設定がONの場合のみ)
+                if (Settings.Search_FilePath)
                 {
-                    isMatch = true;
+                    if (clip.FilePath?.Contains(keyword, comparison) ?? false) isMatch = true;
                 }
 
-                // 2. ライブ形式 (表示名文字列に含まれるか)
-                if (!isMatch)
+                // 文字列プロパティ
+                if (!isMatch && Settings.Search_ClipName)
                 {
-                    if (clip.LiveType.ToDisplayString().Contains(keyword, comparison))
-                    {
-                        isMatch = true;
-                    }
+                    if (clip.ClipName?.Contains(keyword, comparison) ?? false) isMatch = true;
+                }
+                if (!isMatch && Settings.Search_SongTitle)
+                {
+                    if (clip.SongTitle?.Contains(keyword, comparison) ?? false) isMatch = true;
+                }
+                if (!isMatch && Settings.Search_ConcertName)
+                {
+                    if (clip.ConcertName?.Contains(keyword, comparison) ?? false) isMatch = true;
+                }
+                if (!isMatch && Settings.Search_Lyrics)
+                {
+                    if (clip.Lyrics?.Contains(keyword, comparison) ?? false) isMatch = true;
+                }
+                if (!isMatch && Settings.Search_Remarks)
+                {
+                    if (clip.Remarks?.Contains(keyword, comparison) ?? false) isMatch = true;
                 }
 
-                // 3. ブランド (表示名文字列に含まれるか)
-                if (!isMatch)
+                // ライブ形式
+                if (!isMatch && Settings.Search_LiveType)
                 {
-                    // ToDisplayStringは改行区切りで結合されているので、Containsでチェック可能
-                    if (clip.Brands.ToDisplayString().Contains(keyword, comparison))
-                    {
-                        isMatch = true;
-                    }
+                    if (clip.LiveType.ToDisplayString().Contains(keyword, comparison)) isMatch = true;
                 }
 
-                // 4. 出演者 (名前 or 読み に含まれるか)
-                if (!isMatch && clip.Performers != null)
+                // ブランド
+                if (!isMatch && Settings.Search_Brands)
                 {
-                    // 紐づいている出演者の中に、条件にヒットする人が一人でもいればOK
+                    if (clip.Brands.ToDisplayString().Contains(keyword, comparison)) isMatch = true;
+                }
+
+                // 出演者
+                if (!isMatch && Settings.Search_Performers && clip.Performers != null)
+                {
                     if (clip.Performers.Any(p =>
                         (p.Name?.Contains(keyword, comparison) ?? false) ||
                         (p.Yomi?.Contains(keyword, comparison) ?? false)))
@@ -301,11 +316,9 @@ namespace ImasClipManager.ViewModels
                     }
                 }
 
-                // もしこのキーワードがいずれの属性にも含まれていなければ、その時点でFalse (AND条件不成立)
                 if (!isMatch) return false;
             }
 
-            // 全てのキーワードが何らかの属性にヒットした
             return true;
         }
 

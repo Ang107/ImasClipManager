@@ -61,7 +61,18 @@ namespace ImasClipManager.ViewModels
                     (DisplayContext.Editor, "Remarks"),
                     (DisplayContext.Editor, "PlayCount"),
                     (DisplayContext.Editor, "CreatedAt"),
-                    (DisplayContext.Editor, "UpdatedAt")
+                    (DisplayContext.Editor, "UpdatedAt"),
+
+                    // --- Search (検索) ---
+                    (DisplayContext.Search, "FilePath"),
+                    (DisplayContext.Search, "ClipName"),
+                    (DisplayContext.Search, "SongTitle"),
+                    (DisplayContext.Search, "ConcertName"),
+                    (DisplayContext.Search, "LiveType"),
+                    (DisplayContext.Search, "Brands"),
+                    (DisplayContext.Search, "Performers"),
+                    (DisplayContext.Search, "Lyrics"),
+                    (DisplayContext.Search, "Remarks"),
                 };
 
                 // 表でデフォルトOFFにする項目
@@ -70,7 +81,9 @@ namespace ImasClipManager.ViewModels
                     "Table_FilePath",
                     "Table_StartTime",
                     "Table_EndTime",
-                    "Table_ClipName"
+                    "Table_ClipName",
+                    "Search_FilePath",
+                    "Search_ClipName",
                 };
 
                 bool needSave = false;
@@ -160,5 +173,16 @@ namespace ImasClipManager.ViewModels
         public bool Editor_PlayCount { get => GetValue(DisplayContext.Editor, "PlayCount"); set => SetValue(DisplayContext.Editor, "PlayCount", value); }
         public bool Editor_CreatedAt { get => GetValue(DisplayContext.Editor, "CreatedAt"); set => SetValue(DisplayContext.Editor, "CreatedAt", value); }
         public bool Editor_UpdatedAt { get => GetValue(DisplayContext.Editor, "UpdatedAt"); set => SetValue(DisplayContext.Editor, "UpdatedAt", value); }
+
+        // --- ★追加: プロパティ (Search) ---
+        public bool Search_FilePath { get => GetValue(DisplayContext.Search, "FilePath"); set => SetValue(DisplayContext.Search, "FilePath", value); }
+        public bool Search_ClipName { get => GetValue(DisplayContext.Search, "ClipName"); set => SetValue(DisplayContext.Search, "ClipName", value); }
+        public bool Search_SongTitle { get => GetValue(DisplayContext.Search, "SongTitle"); set => SetValue(DisplayContext.Search, "SongTitle", value); }
+        public bool Search_ConcertName { get => GetValue(DisplayContext.Search, "ConcertName"); set => SetValue(DisplayContext.Search, "ConcertName", value); }
+        public bool Search_LiveType { get => GetValue(DisplayContext.Search, "LiveType"); set => SetValue(DisplayContext.Search, "LiveType", value); }
+        public bool Search_Brands { get => GetValue(DisplayContext.Search, "Brands"); set => SetValue(DisplayContext.Search, "Brands", value); }
+        public bool Search_Performers { get => GetValue(DisplayContext.Search, "Performers"); set => SetValue(DisplayContext.Search, "Performers", value); }
+        public bool Search_Lyrics { get => GetValue(DisplayContext.Search, "Lyrics"); set => SetValue(DisplayContext.Search, "Lyrics", value); }
+        public bool Search_Remarks { get => GetValue(DisplayContext.Search, "Remarks"); set => SetValue(DisplayContext.Search, "Remarks", value); }
     }
 }

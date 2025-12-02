@@ -30,6 +30,19 @@
                 <Separator/>
                 <MenuItem Header="終了(_X)" Click="MenuItem_Exit_Click"/>
             </MenuItem>
+            <MenuItem Header="検索(_S)">
+                <MenuItem Header="簡易検索に含める項目">
+                    <MenuItem Header="動画ファイルパス" IsCheckable="True" IsChecked="{Binding Settings.Search_FilePath}"/>
+                    <MenuItem Header="クリップ名" IsCheckable="True" IsChecked="{Binding Settings.Search_ClipName}"/>
+                    <MenuItem Header="曲名" IsCheckable="True" IsChecked="{Binding Settings.Search_SongTitle}"/>
+                    <MenuItem Header="公演名" IsCheckable="True" IsChecked="{Binding Settings.Search_ConcertName}"/>
+                    <MenuItem Header="形式" IsCheckable="True" IsChecked="{Binding Settings.Search_LiveType}"/>
+                    <MenuItem Header="ブランド" IsCheckable="True" IsChecked="{Binding Settings.Search_Brands}"/>
+                    <MenuItem Header="出演者" IsCheckable="True" IsChecked="{Binding Settings.Search_Performers}"/>
+                    <MenuItem Header="歌詞" IsCheckable="True" IsChecked="{Binding Settings.Search_Lyrics}"/>
+                    <MenuItem Header="備考" IsCheckable="True" IsChecked="{Binding Settings.Search_Remarks}"/>
+                </MenuItem>
+            </MenuItem>
             <MenuItem Header="表示(_V)">
                 <MenuItem Header="表に表示する項目">
                     <MenuItem Header="サムネイル" IsCheckable="True" IsChecked="{Binding Settings.Table_Thumbnail}"/>
