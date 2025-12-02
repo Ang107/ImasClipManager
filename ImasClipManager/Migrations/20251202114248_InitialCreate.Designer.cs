@@ -11,8 +11,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ImasClipManager.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20251128062731_AddPlaylistsSimple")]
-    partial class AddPlaylistsSimple
+    [Migration("20251202114248_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -118,6 +118,27 @@ namespace ImasClipManager.Migrations
                     b.HasIndex("SpaceId");
 
                     b.ToTable("Clips");
+                });
+
+            modelBuilder.Entity("ImasClipManager.Models.DisplayState", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Context")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsVisible")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("PropertyKey")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("DisplayStates");
                 });
 
             modelBuilder.Entity("ImasClipManager.Models.Performer", b =>
