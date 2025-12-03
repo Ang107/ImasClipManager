@@ -41,7 +41,7 @@ namespace ImasClipManager.Models
         public string FilePath { get; set; } = string.Empty;
 
         // ... (時間関連はそのまま) ...
-        public long? StartTimeMs { get; set; } = 0;
+        public long? StartTimeMs { get; set; }
         public long? EndTimeMs { get; set; }
 
         [NotMapped]
@@ -51,7 +51,11 @@ namespace ImasClipManager.Models
             get => StartTimeMs.HasValue ? TimeSpan.FromMilliseconds(StartTimeMs.Value).ToString(@"hh\:mm\:ss") : "";
             set
             {
-                if (TimeHelper.TryParseTime(value, out long ms))
+                if (string.IsNullOrWhiteSpace(value))
+                {
+                    StartTimeMs = null;
+                }
+                else if(TimeHelper.TryParseTime(value, out long ms))
                 {
                     StartTimeMs = ms;
                 }

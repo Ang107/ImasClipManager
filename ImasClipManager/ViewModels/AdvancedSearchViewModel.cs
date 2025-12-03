@@ -5,12 +5,15 @@ using ImasClipManager.Models;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Linq;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
+using System.Windows;
 
 namespace ImasClipManager.ViewModels
 {
-    // コンボボックス等の選択肢用クラス
     public class SelectionItem<T> : ObservableObject
     {
         public string Label { get; set; } = "";
@@ -26,36 +29,64 @@ namespace ImasClipManager.ViewModels
     public partial class AdvancedSearchViewModel : ObservableObject
     {
         private readonly MainViewModel _mainViewModel;
+        private CancellationTokenSource? _debounceCts;
 
         [ObservableProperty] private string _searchResultText = "検索結果: - 件";
 
+        // --- エラーメッセージプロパティ (各項目の下に表示) ---
+        [ObservableProperty] private string _durationError = "";
+        [ObservableProperty] private string _concertDateError = "";
+        [ObservableProperty] private string _createdDateError = "";
+        [ObservableProperty] private string _updatedDateError = "";
+
         // --- 検索フィールド ---
         [ObservableProperty] private string _path = "";
+        partial void OnPathChanged(string value) => SearchWithDebounce();
 
-        // 動画時間 (秒数または mm:ss)
+        // 時間 (バリデーション対象)
         [ObservableProperty] private string _minDuration = "";
+        partial void OnMinDurationChanged(string value) => SearchWithDebounce();
+
         [ObservableProperty] private string _maxDuration = "";
+        partial void OnMaxDurationChanged(string value) => SearchWithDebounce();
 
         [ObservableProperty] private string _clipName = "";
-        [ObservableProperty] private string _songTitle = "";
-        [ObservableProperty] private string _concertName = "";
+        partial void OnClipNameChanged(string value) => SearchWithDebounce();
 
+        [ObservableProperty] private string _songTitle = "";
+        partial void OnSongTitleChanged(string value) => SearchWithDebounce();
+
+        [ObservableProperty] private string _concertName = "";
+        partial void OnConcertNameChanged(string value) => SearchWithDebounce();
+
+        // 日付 (バリデーション対象)
         [ObservableProperty] private DateTime? _concertDateFrom;
+        partial void OnConcertDateFromChanged(DateTime? value) => ApplySearch();
+
         [ObservableProperty] private DateTime? _concertDateTo;
+        partial void OnConcertDateToChanged(DateTime? value) => ApplySearch();
 
         [ObservableProperty] private string _lyrics = "";
+        partial void OnLyricsChanged(string value) => SearchWithDebounce();
+
         [ObservableProperty] private string _remarks = "";
+        partial void OnRemarksChanged(string value) => SearchWithDebounce();
 
         [ObservableProperty] private DateTime? _createdFrom;
-        [ObservableProperty] private DateTime? _createdTo;
-        [ObservableProperty] private DateTime? _updatedFrom;
-        [ObservableProperty] private DateTime? _updatedTo;
+        partial void OnCreatedFromChanged(DateTime? value) => ApplySearch();
 
-        // リスト選択系
+        [ObservableProperty] private DateTime? _createdTo;
+        partial void OnCreatedToChanged(DateTime? value) => ApplySearch();
+
+        [ObservableProperty] private DateTime? _updatedFrom;
+        partial void OnUpdatedFromChanged(DateTime? value) => ApplySearch();
+
+        [ObservableProperty] private DateTime? _updatedTo;
+        partial void OnUpdatedToChanged(DateTime? value) => ApplySearch();
+
         public ObservableCollection<SelectionItem<BrandType>> BrandList { get; } = new();
         public ObservableCollection<SelectionItem<LiveType>> LiveTypeList { get; } = new();
 
-        // 出演者 (ダイアログ選択結果)
         [ObservableProperty] private string _performersText = "";
         private List<Performer> _selectedPerformers = new();
 
@@ -63,36 +94,43 @@ namespace ImasClipManager.ViewModels
         {
             _mainViewModel = mainViewModel;
             InitializeLists();
-
-            // 初回計算
             CalculateCount();
-
-            // 入力が変わるたびに件数更新したい場合は、各プロパティのsetterやPropertyChangedイベントで
-            // CalculateCount()を呼ぶようにするとリアルタイム反映されますが、
-            // 今回はシンプルに「適用」ボタンか、特定のタイミングで呼ぶ形にします。
-            // (下記 ApplySearchCommand で反映)
         }
 
         private void InitializeLists()
         {
-            // ブランド
             foreach (BrandType b in Enum.GetValues(typeof(BrandType)))
             {
                 if (b == BrandType.None) continue;
-                BrandList.Add(new SelectionItem<BrandType> { Label = b.ToDisplayString(), Value = b });
+                var item = new SelectionItem<BrandType> { Label = b.ToDisplayString(), Value = b };
+                item.PropertyChanged += OnItemPropertyChanged;
+                BrandList.Add(item);
             }
-            // 形式
             foreach (LiveType t in Enum.GetValues(typeof(LiveType)))
             {
-                LiveTypeList.Add(new SelectionItem<LiveType> { Label = t.ToDisplayString(), Value = t });
+                var item = new SelectionItem<LiveType> { Label = t.ToDisplayString(), Value = t };
+                item.PropertyChanged += OnItemPropertyChanged;
+                LiveTypeList.Add(item);
             }
         }
 
-        // クエリ文字列の生成
+        private void OnItemPropertyChanged(object? sender, PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == nameof(SelectionItem<int>.IsSelected)) ApplySearch();
+        }
+
+        // --- クエリ生成 ---
         public string GenerateQuery()
         {
             var sb = new StringBuilder();
 
+            // エラーリセット
+            DurationError = "";
+            ConcertDateError = "";
+            CreatedDateError = "";
+            UpdatedDateError = "";
+
+            // 文字列系 (これらはそのまま)
             AppendText(sb, "?path", Path);
             AppendText(sb, "?clip", ClipName);
             AppendText(sb, "?song", SongTitle);
@@ -100,10 +138,66 @@ namespace ImasClipManager.ViewModels
             AppendText(sb, "?lyrics", Lyrics);
             AppendText(sb, "?remarks", Remarks);
 
-            AppendRange(sb, "?duration", TimeStrSeconds(MinDuration), TimeStrSeconds(MaxDuration));
-            AppendRange(sb, "?date", DateStr(ConcertDateFrom), DateStr(ConcertDateTo));
-            AppendRange(sb, "?created", DateStr(CreatedFrom), DateStr(CreatedTo));
-            AppendRange(sb, "?updated", DateStr(UpdatedFrom), DateStr(UpdatedTo));
+            // 1. 動画時間のバリデーション
+            bool isMinValid = TimeHelper.TryParseTime(MinDuration, out long minMs);
+            bool isMaxValid = TimeHelper.TryParseTime(MaxDuration, out long maxMs);
+
+            if (!isMinValid && !string.IsNullOrEmpty(MinDuration))
+            {
+                DurationError = "下限の形式が不正です";
+            }
+            else if (!isMaxValid && !string.IsNullOrEmpty(MaxDuration))
+            {
+                DurationError = "上限の形式が不正です";
+            }
+            else
+            {
+                // 空の場合は比較対象にしない
+                bool hasMin = !string.IsNullOrEmpty(MinDuration);
+                bool hasMax = !string.IsNullOrEmpty(MaxDuration);
+
+                if (hasMin && hasMax && minMs > maxMs)
+                {
+                    DurationError = "下限が上限を超えています";
+                }
+                else
+                {
+                    // 正常または片方のみ
+                    string minStr = hasMin ? (minMs / 1000.0).ToString() : "";
+                    string maxStr = hasMax ? (maxMs / 1000.0).ToString() : "";
+                    AppendRange(sb, "?duration", minStr, maxStr);
+                }
+            }
+
+            // 2. 公演日のバリデーション
+            if (ConcertDateFrom != null && ConcertDateTo != null && ConcertDateFrom > ConcertDateTo)
+            {
+                ConcertDateError = "開始日が終了日より未来です";
+            }
+            else
+            {
+                AppendRange(sb, "?date", DateStr(ConcertDateFrom), DateStr(ConcertDateTo));
+            }
+
+            // 3. 登録日のバリデーション
+            if (CreatedFrom != null && CreatedTo != null && CreatedFrom > CreatedTo)
+            {
+                CreatedDateError = "開始日が終了日より未来です";
+            }
+            else
+            {
+                AppendRange(sb, "?created", DateStr(CreatedFrom), DateStr(CreatedTo));
+            }
+
+            // 4. 更新日のバリデーション
+            if (UpdatedFrom != null && UpdatedTo != null && UpdatedFrom > UpdatedTo)
+            {
+                UpdatedDateError = "開始日が終了日より未来です";
+            }
+            else
+            {
+                AppendRange(sb, "?updated", DateStr(UpdatedFrom), DateStr(UpdatedTo));
+            }
 
             // 集合 (OR)
             AppendSelection(sb, "?brands", BrandList.Where(b => b.IsSelected).Select(b => b.Label));
@@ -121,7 +215,6 @@ namespace ImasClipManager.ViewModels
         {
             if (!string.IsNullOrWhiteSpace(value))
             {
-                // スペースを含む場合はクォート
                 if (value.Contains(" ")) sb.Append($"{key}:\"{value}\" ");
                 else sb.Append($"{key}:{value} ");
             }
@@ -139,29 +232,20 @@ namespace ImasClipManager.ViewModels
         {
             var list = values.ToList();
             if (!list.Any()) return;
-
-            // 常に ?key:(A OR B) の形式にする
             var joined = string.Join(" OR ", list.Select(v => $"\"{v}\""));
             sb.Append($"{key}:({joined}) ");
-        }
-
-        private string TimeStrSeconds(string input)
-        {
-            if (string.IsNullOrWhiteSpace(input)) return "";
-            if (TimeHelper.TryParseTime(input, out long ms)) return (ms / 1000).ToString();
-            // 数値変換できなければそのまま返す(パーサー側で処理)
-            return input;
         }
 
         private string DateStr(DateTime? d) => d?.ToString("yyyy/MM/dd") ?? "";
 
         // --- コマンド ---
 
-        [RelayCommand]
         public void ApplySearch()
         {
             var query = GenerateQuery();
-            // MainViewModelのSearchTextを更新 -> 自動的に検索が走る
+            // 不正な項目はクエリに含まれないため、正しい条件のみで検索される
+            // (前回検索結果を保持したい場合はエラー判定を追加してここでreturnするが、
+            //  今回は「不正な欄の更新を行わない」=「その条件を除外して検索」と解釈し、常に検索を実行する)
             _mainViewModel.SearchText = query;
             CalculateCount();
         }
@@ -188,24 +272,34 @@ namespace ImasClipManager.ViewModels
         [RelayCommand]
         public void SelectPerformers()
         {
-            // 既存の選択画面VM/Viewを利用
             var vm = new PerformerSelectionViewModel(_selectedPerformers);
             var win = new Views.PerformerSelectionWindow(vm);
-            // 本来はOwner設定が必要ですが、ViewModelからは直接触れないため省略
-            // (Viewのコードビハインドで設定するか、Service経由で開くのが理想)
 
             if (win.ShowDialog() == true)
             {
                 _selectedPerformers = vm.GetSelectedPerformers();
                 PerformersText = string.Join(", ", _selectedPerformers.Select(p => p.Name));
+                ApplySearch();
             }
+        }
+
+        private async void SearchWithDebounce()
+        {
+            try
+            {
+                _debounceCts?.Cancel();
+                _debounceCts = new CancellationTokenSource();
+                var token = _debounceCts.Token;
+                await Task.Delay(300, token);
+                Application.Current.Dispatcher.Invoke(ApplySearch);
+            }
+            catch (TaskCanceledException) { }
         }
 
         public void CalculateCount()
         {
             var query = GenerateQuery();
-            // 一時的にパースして計算
-            var predicate = SearchQueryParser.Parse(query, null); // 設定無視(明示指定のみのため)
+            var predicate = SearchQueryParser.Parse(query, null);
             int count = _mainViewModel.Clips.Count(c => predicate(c));
             SearchResultText = $"検索結果: {count} 件";
         }

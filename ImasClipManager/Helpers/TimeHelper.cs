@@ -1,5 +1,5 @@
-﻿// ImasClipManager/Helpers/TimeHelper.cs
-using System;
+﻿using System;
+using System.Globalization;
 
 namespace ImasClipManager.Helpers
 {
@@ -10,8 +10,17 @@ namespace ImasClipManager.Helpers
             resultMs = 0;
             if (string.IsNullOrWhiteSpace(input)) return true; // 空文字は0扱い（成功）
 
-            // mm:ss 形式の独自対応
+            // 1. 数値のみの場合 (秒として扱う) -> "30" = 30秒
+            if (double.TryParse(input, out double seconds))
+            {
+                resultMs = (long)(seconds * 1000);
+                return true;
+            }
+
+            // 2. コロン区切りの処理
             var parts = input.Split(':');
+
+            // mm:ss 形式
             if (parts.Length == 2)
             {
                 if (double.TryParse(parts[0], out double mm) && double.TryParse(parts[1], out double ss))
@@ -20,19 +29,21 @@ namespace ImasClipManager.Helpers
                     return true;
                 }
             }
-
-            // 標準的な TimeSpan パース (hh:mm:ss など)
-            if (TimeSpan.TryParse(input, out var ts))
+            // hh:mm:ss 形式
+            else if (parts.Length == 3)
             {
-                resultMs = (long)ts.TotalMilliseconds;
-                return true;
+                if (double.TryParse(parts[0], out double hh) &&
+                    double.TryParse(parts[1], out double mm) &&
+                    double.TryParse(parts[2], out double ss))
+                {
+                    resultMs = (long)(TimeSpan.FromHours(hh) + TimeSpan.FromMinutes(mm) + TimeSpan.FromSeconds(ss)).TotalMilliseconds;
+                    return true;
+                }
             }
-
             return false;
         }
 
-
-        // ★追加: ミリ秒を "hh:mm:ss" または "mm:ss" 形式に変換
+        // ミリ秒を "hh:mm:ss" または "mm:ss" 形式に変換
         public static string FormatDuration(long durationMs)
         {
             if (durationMs < 0) durationMs = 0;
